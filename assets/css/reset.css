@@ -1,0 +1,70 @@
+/* ===========================================================
+   RESET CSS GLOBAL MODERNO
+   Pode ser usado em qualquer projeto HTML/CSS
+   =========================================================== */
+
+/* Remove margens, paddings e define box-sizing para todos os elementos */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Remove decoração de listas */
+ol, ul {
+    list-style: none;
+}
+
+/* Remove decoração de links */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Remove bordas de elementos comuns */
+img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 0;
+}
+
+/* Remove estilos padrão de botões e inputs */
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    appearance: none;
+}
+
+/* Garante que o HTML ocupe toda a altura */
+html, body {
+    height: 100%;
+}
+
+/* Suaviza fontes */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove quotes padrão em blockquotes e q */
+blockquote, q {
+    quotes: none;
+}
+blockquote::before, blockquote::after,
+q::before, q::after {
+    content: '';
+    content: none;
+}
+
+/* Define base para tabelas */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}

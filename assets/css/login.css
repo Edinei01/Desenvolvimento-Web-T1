@@ -1,0 +1,165 @@
+/* Importa o reset global */
+@import url('../css/reset.css');
+
+/* ===========================
+           RESET E CONFIGURAÇÃO GLOBAL
+    ============================ */
+
+/* Fonte e centralização do body */
+html,
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Garante largura total do body */
+body {
+    width: 100%;
+}
+
+/*
+// Exemplo de estilização alternativa para o main (comentado)
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    margin: 0 24px;
+}
+*/
+
+/* ===========================
+        GRID PRINCIPAL DA PÁGINA
+    ============================ */
+main {
+    display: grid;
+    padding-left: 24px;
+    padding-right: 24px;
+    gap: 20px;
+    grid-template-columns: repeat(12, 1fr);
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+    height: 100vh;
+    /* margin: 0 24px; */
+}
+
+/* ===========================
+        CARD DE LOGIN (SEÇÃO)
+    ============================ */
+.login-section {
+    grid-column: 5 / 9;
+    background-color: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 480px;
+    /* height: 384px; */
+    /* height: auto; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* ===========================
+        TÍTULO DO CARD
+   ============================ */
+.login-section h2 {
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 1.7rem;
+    color: #222;
+    letter-spacing: 1px;
+}
+
+/* ===========================
+        FORMULÁRIO DE LOGIN
+    ============================ */
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ===========================
+        LABELS DOS CAMPOS
+    ============================ */
+#login-form label {
+    font-size: 0.97rem;
+    color: #333;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+/* ===========================
+      INPUTS DE TEXTO E SENHA
+   ============================ */
+#login-form input[type="email"],
+#login-form input[type="password"] {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.97rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+/* Efeito de foco nos inputs */
+#login-form input[type="email"]:focus,
+#login-form input[type="password"]:focus {
+    border-color: #007bff;
+}
+
+
+/* ===========================
+        MENSAGEM DE ERRO
+   ============================ */
+#login-error {
+    color: #ff0000;
+    font-size: 0.9rem;
+    margin-top: 2px;
+    font-weight: 600;
+    /* text-align: center; */
+}
+
+
+.input-error {
+    border-color: #ff0000 !important;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ===========================
+        BOTÃO DE LOGIN
+   ============================ */
+.btn-login {
+    /* margin-top: 14px; */
+    padding: 10px 0;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* Efeito hover/focus no botão */
+.btn-login:hover,
+.btn-login:focus {
+    background-color: #0056b3;
+}
