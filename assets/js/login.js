@@ -1,16 +1,17 @@
-// Seleciona o formulário pelo ID
+// Seleciona elementos
 const form = document.getElementById('login-form');
+const email = document.getElementById('email');
+const password = document.getElementById('password');
+const errorSpan = document.getElementById('login-error');
 
 function errorMessage(message) {
-    const errorSpan = document.getElementById('login-error');
     if (errorSpan) {
         errorSpan.textContent = message;
         errorSpan.classList.remove('hidden');
-    }  
+    }
 }
 
 function clearErrorMessage() {
-    const errorSpan = document.getElementById('login-error');
     if (errorSpan) {
         errorSpan.textContent = '';
         errorSpan.classList.add('hidden');
@@ -18,8 +19,6 @@ function clearErrorMessage() {
 }
 
 function clearInputFields() {
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
     if (email) email.value = '';
     if (password) password.value = '';
 }
@@ -31,72 +30,76 @@ function inputFocus(field) {
     }
 }
 
-// / Remove o erro quando o usuário começa a digitar
 function removeInputError(field) {
-    field.addEventListener('input', () => {
-        field.classList.remove('input-error');
-    });
+    field.addEventListener('input', () => field.classList.remove('input-error'));
 }
 
-
-document.addEventListener('DOMContentLoaded', async () => {
+// 🔹 Verifica sessão existente
+async function existsSession() {
     try {
-        const response = await fetch('./../includes/check_session.php'); // arquivo PHP que verifica sessão
+        const response = await fetch('../includes/check_session.php');
         const result = await response.json();
-
         if (result.logged_in) {
-            // Se já estiver logado, redireciona direto
             window.location.href = '../pages/teste.html';
+            return true;
         }
-        // Se não estiver logado, continua na página de login
+        return false;
     } catch (err) {
         console.error('Erro ao verificar sessão:', err);
+        return false;
     }
-});
+}
 
+// 🔹 Função para enviar login
+function loginUser() {
+    const user_data = {
+        action: 'login', // ESSENCIAL
+        email: email.value,
+        password: password.value
+    };
 
-if (form) {
+    removeInputError(email);
+    removeInputError(password);
 
-    form.addEventListener('submit', (e) => {
+    fetch('../includes/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user_data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        console.log('Resposta da API:', result);
 
-        e.preventDefault();
-
-        const user_data = {
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value
+        if (result.success) {
+            clearErrorMessage();
+            clearInputFields();
+            window.location.href = '../pages/teste.html';
+            return;
         }
 
-        removeInputError(email);
-        removeInputError(password);
-
-        fetch('./../includes/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(user_data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log('Resposta da API:', result);
-                if (result.success) {
-                    clearErrorMessage();
-                    clearInputFields();
-                    window.location.href = 'teste.html';
-                }
-
-                if (result.invalid_field) {
-                    const field = document.getElementById(result.invalid_field);
-                    inputFocus(field);
-                    errorMessage(`Login ou senha inválido!`);
-                }else {
-                    clearErrorMessage();
-                }
-                
-            })
-            .catch(err => {
-                console.error('Erro na requisição:', err);
-                alert('Erro ao conectar com a API.');
-            })   
+        if (result.invalid_field) {
+            const field = document.getElementById(result.invalid_field);
+            inputFocus(field);
+            errorMessage('Login ou senha inválidos!');
+        } else {
+            errorMessage(result.message || 'Erro ao logar.');
+        }
+    })
+    .catch(err => {
+        console.error('Erro na requisição:', err);
+        alert('Erro ao conectar com a API.');
     });
 }
+
+// 🔹 Inicializa quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!form) return;
+
+    const loggedIn = await existsSession();
+    if (!loggedIn) {
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            loginUser();
+        });
+    }
+});
