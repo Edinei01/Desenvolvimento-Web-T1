@@ -13,16 +13,16 @@
     <main>
         <section class="login-section">
             <h2>Login</h2>
-            <form id="login-form">
+            <form id="login-form" method="post">
                 <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="email" id="email" name="username" required>
+                    <label for="email">Username:</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <span id="login-error" class="hidden">Login ou senha inválido!</span>
+                <span id="login-error" class="hidden"></span>
                 <button type="submit" class="btn-login">Login</button>
             </form>
         </section>
