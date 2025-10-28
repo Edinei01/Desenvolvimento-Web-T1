@@ -1,0 +1,275 @@
+
+
+Desenvolvimento-Web-T1/
+│
+├─ app/
+│  ├─ Controllers/
+│  │  ├─ UserController.php
+│  │  └─ ContactController.php
+│  │
+│  ├─ Models/
+│  │  ├─ User.php
+│  │  └─ Contact.php
+│  │
+│  ├─ Core/
+│  │  └─ Database.php
+│  │
+│  └─ Views/
+│     ├─ auth/
+│     │  ├─ login.php
+│     │  ├─ register.php
+│     │  └─ logout.php
+│     │
+│     ├─ contacts/
+│     │  ├─ index.php
+│     │  ├─ add.php
+│     │  ├─ edit.php
+│     │  └─ view.php
+│     │
+│     └─ layout/
+│        ├─ header.php
+│        ├─ footer.php
+│        └─ navbar.php
+│
+├─ public/
+│  ├─ assets/
+│  │  ├─ css/
+│  │  │  ├─ cadastroUser.css
+│  │  │  ├─ login.css
+│  │  │  ├─ reset.css
+│  │  │  └─ contacts.css
+│  │  ├─ js/
+│  │  │  ├─ cadastroUser.js
+│  │  │  ├─ login.js
+│  │  │  ├─ contacts.js
+│  │  │  └─ utils.js
+│  │  └─ img/
+│  │     └─ (vazio)
+│  │
+│  └─ index.php
+│
+├─ config/
+│  └─ config.php             # Constantes globais, ex: DB, BASE_URL
+│
+├─ database/
+│  └─ meubanco.sql
+│
+├─ routes/
+│  └─ web.php                # Define qual controller e método responderá cada rota
+│
+├─ docs/
+│  └─ (vazio)
+│
+└─ README.md
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Desenvolvimento-Web-T1/
+│
+├─ app/
+│  ├─ Core/
+│  │  └─ Database.php
+│  │     # 🔹 Antigo config/database.php
+│  │     # Gerencia a conexão com o banco
+│  │
+│  ├─ Models/
+│  │  ├─ User.php
+│  │  │  # 🔹 Representa a tabela TB_USER
+│  │  │  # Contém métodos CRUD para usuários
+│  │  └─ Contact.php
+│  │     # 🔹 Representa a tabela TB_CONTACTS
+│  │     # Contém métodos CRUD para contatos
+│  │
+│  ├─ Controllers/
+│  │  ├─ UserController.php
+│  │  │  # 🔹 Antigo includes/auth/login.php, register.php, logout.php, check_session.php
+│  │  │  # Contém métodos login(), register(), logout()
+│  │  └─ ContactController.php
+│  │     # 🔹 Antigo includes/contacts/add_contact.php, edit_contact.php, delete_contact.php, get_contacts.php
+│  │     # Contém métodos add(), edit(), delete(), index(), view()
+│  │
+│  └─ Views/
+│     ├─ auth/
+│     │  ├─ login.php
+│     │  │  # 🔹 Antigo pages/login.html
+│     │  ├─ register.php
+│     │  │  # 🔹 Antigo pages/cadastro.html
+│     │  └─ logout.php
+│     │     # 🔹 Mensagem de logout
+│     │
+│     ├─ contacts/
+│     │  ├─ index.php
+│     │  │  # 🔹 Antigo pages/contacts.php
+│     │  │  # Página principal de contatos após login
+│     │  ├─ add.php
+│     │  │  # 🔹 Antigo pages/add_contact.php
+│     │  ├─ edit.php
+│     │  │  # 🔹 Antigo pages/edit_contact.php
+│     │  └─ view.php
+│     │     # 🔹 Antigo pages/view_contact.php
+│     │
+│     └─ layout/
+│        ├─ header.php
+│        │  # 🔹 Cabeçalho padrão (HTML <head>, menu, CSS, etc.)
+│        ├─ footer.php
+│        │  # 🔹 Rodapé do site
+│        └─ navbar.php
+│           # 🔹 Menu de navegação
+│
+├─ public/
+│  ├─ assets/
+│  │  ├─ css/
+│  │  │  ├─ cadastroUser.css
+│  │  │  ├─ login.css
+│  │  │  ├─ reset.css
+│  │  │  └─ contacts.css
+│  │  ├─ js/
+│  │  │  ├─ cadastroUser.js
+│  │  │  ├─ login.js
+│  │  │  ├─ contacts.js
+│  │  │  └─ utils.js
+│  │  └─ img/
+│  │     └─ (vazio)
+│  │
+│  └─ index.php
+│     # 🔹 Ponto de entrada do sistema
+│     # Carrega autoload, config, rotas e chama o controller correto
+│
+├─ config/
+│  └─ config.php
+│     # 🔹 Constantes globais
+│     # DB_HOST, DB_USER, DB_PASS, DB_NAME, BASE_URL, etc.
+│
+├─ database/
+│  └─ meubanco.sql
+│     # 🔹 Script SQL do seu banco de dados
+│
+├─ routes/
+│  └─ web.php
+│     # 🔹 Define rotas do sistema
+│     # Ex.: /login → UserController@login
+│
+├─ docs/
+│  └─ (vazio)
+│
+└─ README.md
+
+
+
+
+
+
+Desenvolvimento-Web-T1/
+│
+├─ app/
+│  ├─ Core/
+│  │  └─ Database.php
+│  │     # 🔹 Classe responsável pela conexão com o banco de dados
+│  │
+│  ├─ Enums/
+│  │  └─ Category.php
+│  │     # 🔹 Define o enum Category (ex: Família, Trabalho, Amigos, etc.)
+│  │     # 🔹 Pode conter outros enums no futuro, como Status, Role, etc.
+│  │
+│  ├─ Models/
+│  │  ├─ User.php
+│  │  │  # 🔹 Representa a tabela TB_USER
+│  │  │  # Contém métodos CRUD e regras de negócio relacionadas ao usuário
+│  │  └─ Contact.php
+│  │     # 🔹 Representa a tabela TB_CONTACTS
+│  │     # Contém métodos CRUD e validações dos contatos
+│  │
+│  ├─ Controllers/
+│  │  ├─ UserController.php
+│  │  │  # 🔹 Controla login, registro, logout e sessão de usuário
+│  │  └─ ContactController.php
+│  │     # 🔹 Controla CRUD de contatos (add, edit, delete, list, view)
+│  │
+│  └─ Views/
+│     ├─ auth/
+│     │  ├─ login.php
+│     │  ├─ register.php
+│     │  └─ logout.php
+│     │     # 🔹 Páginas relacionadas à autenticação
+│     │
+│     ├─ contacts/
+│     │  ├─ index.php
+│     │  ├─ add.php
+│     │  ├─ edit.php
+│     │  └─ view.php
+│     │     # 🔹 Páginas relacionadas aos contatos
+│     │
+│     └─ layout/
+│        ├─ header.php
+│        ├─ footer.php
+│        └─ navbar.php
+│           # 🔹 Layout base (HTML padrão)
+│
+├─ public/
+│  ├─ assets/
+│  │  ├─ css/
+│  │  │  ├─ cadastroUser.css
+│  │  │  ├─ login.css
+│  │  │  ├─ reset.css
+│  │  │  └─ contacts.css
+│  │  │     # 🔹 Estilos de cada página
+│  │  │
+│  │  ├─ js/
+│  │  │  ├─ cadastroUser.js
+│  │  │  ├─ login.js
+│  │  │  ├─ contacts.js
+│  │  │  └─ utils.js
+│  │  │     # 🔹 Scripts de validação e interação com backend
+│  │  │
+│  │  └─ img/
+│  │     └─ (vazio)
+│  │     # 🔹 Imagens do projeto
+│  │
+│  └─ index.php
+│     # 🔹 Ponto de entrada principal (front controller)
+│     # Inicializa autoload, rotas e o controller correspondente
+│
+├─ config/
+│  └─ config.php
+│     # 🔹 Define constantes globais (DB_HOST, DB_USER, DB_PASS, BASE_URL, etc.)
+│
+├─ database/
+│  └─ meubanco.sql
+│     # 🔹 Script SQL do banco de dados
+│
+├─ routes/
+│  └─ web.php
+│     # 🔹 Define rotas e associa a métodos dos controllers
+│
+├─ docs/
+│  └─ (vazio)
+│     # 🔹 Documentação futura
+│
+└─ README.md
+   # 🔹 Descrição geral do projeto

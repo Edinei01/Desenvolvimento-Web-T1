@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Assistente de Voz</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
+}
+
+#modal {
+  display: none;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+#modal h2 {
+  margin-top: 0;
+}
+
+#log {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.log-entry span {
+  margin-left: 10px;
+}
+
+.valid { color: green; }
+.invalid { color: red; }
+
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+}
+</style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="modal">
+  <h2>Assistente de Voz</h2>
+  <div id="log"></div>
+</div>
+
+<script>
+const modal = document.getElementById('modal');
+const overlay = document.getElementById('overlay');
+const log = document.getElementById('log');
+
+const palavrasChave = [
+  "adicionar contato",
+  "modificar contato",
+  "deletar contato",
+  "excluir contato",
+  "buscar contato"
+];
+
+let ouvindoComando = false;
+
+// Funções para abrir e fechar modal
+function abrirModal() {
+  modal.style.display = 'block';
+  overlay.style.display = 'block';
+}
+
+function fecharModal() {
+  modal.style.display = 'none';
+  overlay.style.display = 'none';
+}
+
+// Função para adicionar entrada no modal
+function adicionarLog(texto, valido) {
+  const entry = document.createElement('div');
+  entry.classList.add('log-entry');
+  entry.classList.add(valido ? 'valid' : 'invalid');
+  entry.innerHTML = (valido ? '✅' : '❌') + '<span>' + texto + '</span>';
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// Inicializa reconhecimento de voz
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'pt-BR';
+recognition.continuous = true;
+recognition.interimResults = false;
+
+recognition.onresult = (event) => {
+  const texto = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+  console.log("Texto capturado:", texto);
+
+  // Detecta wake word e comando de fechar
+  if (texto.includes("ok sistema")) {
+    if (texto.includes("fechar")) {
+      fecharModal();
+      adicionarLog("Modal fechado pelo comando de voz", true);
+      ouvindoComando = false;
+    } else {
+      abrirModal();
+      adicionarLog("Wake word detectada! Fale seu comando...", true);
+      ouvindoComando = true;
+    }
+  } else if (ouvindoComando) {
+    // Captura comandos dentro do modal
+    adicionarLog(texto, palavrasChave.some(p => texto.includes(p)));
+
+    const contemChave = palavrasChave.find(p => texto.includes(p));
+    if (contemChave) {
+      adicionarLog(`Palavra chave detectada: "${contemChave}"`, true);
+    } else {
+      adicionarLog("Comando inválido", false);
+    }
+  }
+};
+
+recognition.onend = () => {
+  recognition.start(); // Reinicia para ouvir sempre
+};
+
+recognition.onerror = (event) => {
+  console.error("Erro:", event.error);
+};
+
+recognition.start();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Assistente de Voz</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
+}
+
+#modal {
+  display: none;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px; 
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+#modal h2 {
+  margin-top: 0;
+}
+
+#log {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.log-entry span {
+  margin-left: 10px;
+}
+
+.valid { color: green; }
+
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+}
+</style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="modal">
+  <h2>Assistente de Voz</h2>
+  <div id="log"></div>
+</div>
+
+<script>
+const modal = document.getElementById('modal');
+const overlay = document.getElementById('overlay');
+const log = document.getElementById('log');
+
+let vozSelecionada = null;
+
+function abrirModal() {
+  modal.style.display = 'block';
+  overlay.style.display = 'block';
+}
+
+function fecharModal() {
+  modal.style.display = 'none';
+  overlay.style.display = 'none';
+}
+
+function adicionarLog(texto) {
+  const entry = document.createElement('div');
+  entry.classList.add('log-entry');
+  entry.classList.add('valid');
+  entry.innerHTML = '🗣️ <span>' + texto + '</span>';
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ---- Função falar com voz carregada ----
+function falar(texto) {
+  if (!vozSelecionada) return; // espera as vozes carregarem
+  const utter = new SpeechSynthesisUtterance(texto);
+  utter.lang = 'pt-BR';
+  utter.voice = vozSelecionada;
+  utter.rate = 1;
+  utter.pitch = 1;
+  utter.volume = 1;
+  speechSynthesis.cancel(); // cancela fala anterior
+  speechSynthesis.speak(utter);
+}
+
+// ---- Espera vozes carregarem ----
+function carregarVoz() {
+  const voices = speechSynthesis.getVoices();
+  vozSelecionada = voices.find(v => v.lang === 'pt-BR') || voices[0];
+}
+
+// evento garante que as vozes carreguem no Chrome
+speechSynthesis.onvoiceschanged = carregarVoz;
+
+// ---- Reconhecimento de voz ----
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'pt-BR';
+recognition.continuous = true;
+recognition.interimResults = false;
+
+recognition.onresult = (event) => {
+  const texto = event.results[event.results.length - 1][0].transcript.trim();
+  console.log("Você disse:", texto);
+
+  abrirModal();
+  adicionarLog(`Você disse: "${texto}"`);
+  falar(texto);
+
+  // comando fechar
+  if (texto.toLowerCase().includes("fechar")) {
+    falar("Fechando o sistema");
+    fecharModal();
+  }
+};
+
+recognition.onerror = (event) => console.error("Erro no reconhecimento:", event.error);
+recognition.onend = () => recognition.start(); // mantém ouvindo sempre
+
+recognition.start();
+</script>
+</body>
+</html> -->
