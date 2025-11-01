@@ -156,12 +156,26 @@ const initAddContact = () => {
         const phoneInput = editForm.querySelector('#phone');
         const categoryInput = editForm.querySelector('#category');
         const notesInput = editForm.querySelector('#notes');
-
+        
         // Buscar dados do contato
-        fetchJSON(`../includes/contacts/get_contacts.php?id=${contactId}`)
+        // fetchJSON(`../includes/contacts/get_contacts.php?id=${contactId}`)
+
+        fetchJSON(`./../../app/controllers/ContactController.php`,{
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getContact', id: contactId })
+            }
+        )
             .then(data => {
+
+                console.log("contactId = "+contactId);
+                // alertMsg(JSON.stringify(data));
+                console.log(JSON.stringify(data, null, 2));
                 if (data.status === 'success') {
-                    const contact = data.data.find(c => c.ID == contactId);
+                    // alertMsg("Contato carregado com sucesso! qwert");
+                    contact = data.data;
+                    // const contact = data.data.find(c => String(c.ID) == String(contactId));
+                    // console.log("Contato encontrado:"+ contact);
                     if (contact) {
                         nameInput.value = contact.NAME || "";
                         emailInput.value = contact.EMAIL || "";
@@ -189,14 +203,17 @@ const initAddContact = () => {
                 notes: notesInput.value
             };
 
+            // alertMsg("Atualizando contato...");
+            // console.log("aqui->"+JSON.stringify(updatedContact, null, 2));
+
             fetchJSON('../includes/contacts/edit_contact.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedContact)
+                body: JSON.stringify({action: 'editContact', dada: updatedContact})
             }).then(data => {
                 if (data.status === 'success') {
                     alertMsg('Contato atualizado com sucesso!');
-                    window.location.href = 'contacts.php';
+                    // window.location.href = 'contacts.php';
                 } else {
                     alertMsg('Erro ao atualizar: ' + (data.message || 'Erro desconhecido'));
                 }

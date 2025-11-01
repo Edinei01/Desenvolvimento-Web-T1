@@ -1,5 +1,11 @@
 <?php
 // include_once "../includes/auth/check_session.php";
+
+    require_once __DIR__ . "/../models/User.php";
+
+    use app\models\User;
+
+    User::LoggedIn();
 ?>
 
 <!DOCTYPE html>

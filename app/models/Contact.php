@@ -81,15 +81,6 @@
             // session_start();
             header('Content-Type: application/json');
 
-            // Verifica se o usuário está logado
-            // if (!isset($_SESSION['user'])) {
-            //     echo json_encode(["status" => "error", "message" => "Usuário não autenticado"]);
-            //     exit;
-            // }
-
-            // Busca ID do usuário logado
-            // $email = $_SESSION['user'];
-
             $email = User::LoggedIn();
             $user = User::loadByEmail($email);
 
@@ -122,126 +113,27 @@
             self::$connection::closeConnection();
         }
 
-
-        // private function getContacts(int $id_contact): ?array {
-        //     // session_start();
-        //     header('Content-Type: application/json');
-
-        //     // Verifica se o usuário está logado
-        //     // if (!isset($_SESSION['user'])) {
-        //     //     echo json_encode(["status" => "error", "message" => "Usuário não autenticado"]);
-        //     //     exit;
-        //     // }
-
-        //     // Busca ID do usuário logado
-        //     // $email = $_SESSION['user'];
-
-        //     // $email = User::LoggedIn();
-        //     // $this->user = User::loadByEmail(User::LoggedIn());
-
-        //     // // $user_id = null;
-        //     // // $user_id = $this->user->getId();
-        //     // //  
-
-        //     // if (!$this->user) {
-        //     //     echo json_encode(["status" => "error", "message" => "Usuário não encontrado"]);
-        //     //     exit;
-        //     // }
-
-        //     $sql = "select * from TB_CONTACT where ID = ?";
-        //     $stmt = self::$connection->prepare($sql);
-        //     $stmt->bind_param("i", $id_contact);
-        //     $stmt->execute();
-        //     $result = $stmt->get_result();
-        //     $contact = $result->fetch_assoc();
-        //     $stmt->close();
-        //     self::$connection::closeConnection();
-        //     return [
-        //         "status" => "success",
-        //         "data" => $contact
-        //     ];
-        //     // return $contact;
-        //     // // Chama a procedure para listar contatos
-        //     // $stmt = self::$connection->prepare("CALL get_user_contacts(?)");
-        //     // $stmt->bind_param("i", $user_id);
-        //     // $stmt->execute();
-        //     // $result = $stmt->get_result();
-
-        //     // $contacts = [];
-        //     // while ($row = $result->fetch_assoc()) {
-        //     //     $contacts[] = $row;
-        //     // }
-
-        //     // echo json_encode([
-        //     //     "status" => "success",
-        //     //     "data" => $contacts
-        //     // ]);
-
-        //     // $stmt->close();
-        //     // self::$connection::closeConnection();
-        // }
-
-        // private function getContacts2(int $id_contact): ?array {
-        //     // session_start();
-        //     header('Content-Type: application/json');
-
-        //     // Verifica se o usuário está logado
-        //     // if (!isset($_SESSION['user'])) {
-        //     //     echo json_encode(["status" => "error", "message" => "Usuário não autenticado"]);
-        //     //     exit;
-        //     // }
-
-        //     // Busca ID do usuário logado
-        //     // $email = $_SESSION['user'];
-
-        //     // $email = User::LoggedIn();
-        //     // $this->user = User::loadByEmail(User::LoggedIn());
-
-        //     // // $user_id = null;
-        //     // // $user_id = $this->user->getId();
-        //     // //  
-
-        //     // if (!$this->user) {
-        //     //     echo json_encode(["status" => "error", "message" => "Usuário não encontrado"]);
-        //     //     exit;
-        //     // }
-
-        //     $sql = "select * from TB_CONTACT where ID = ?";
-        //     $stmt = self::$connection->prepare($sql);
-        //     $stmt->bind_param("i", $id_contact);
-        //     $stmt->execute();
-        //     $result = $stmt->get_result();
-        //     $contact = $result->fetch_assoc();
-        //     $stmt->close();
-        //     self::$connection::closeConnection();
-        //     return [
-        //         "status" => "success",
-        //         "data" => $contact
-        //     ];
-        //     // return $contact;
-        //     // // Chama a procedure para listar contatos
-        //     // $stmt = self::$connection->prepare("CALL get_user_contacts(?)");
-        //     // $stmt->bind_param("i", $user_id);
-        //     // $stmt->execute();
-        //     // $result = $stmt->get_result();
-
-        //     // $contacts = [];
-        //     // while ($row = $result->fetch_assoc()) {
-        //     //     $contacts[] = $row;
-        //     // }
-
-        //     // echo json_encode([
-        //     //     "status" => "success",
-        //     //     "data" => $contacts
-        //     // ]);
-
-        //     // $stmt->close();
-        //     // self::$connection::closeConnection();
-        // }
-
         public function getContact(int $id_contact): ?array {
             // return $this->getContacts($id_contact);
             return $this->getContactById($id_contact);
+        }
+
+
+        public function getContactID(): ?int{
+            
+            $email = $this->email;
+            $sql = "SELECT ID FROM TB_CONTACTS WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $id = null;
+            $stmt->bind_result($id);
+            $stmt->fetch();
+            $stmt->close();
+ 
+
+            
+            return $id;
         }
 
         private function add(){
@@ -306,7 +198,7 @@
                 echo json_encode([
                     "status" => "error",
                     "message" => "Erro ao recuperar saída da procedure."
-                ]);
+                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             }
 
             // Fecha conexão com o banco
@@ -329,21 +221,18 @@
 
         private function getContactById(int $contactId): ?array {
             header('Content-Type: application/json');
-    // if (!self::$connection) {
-    //     self::$connection = Database::getConnection();
-    // }
+        
+            $sql = "SELECT * FROM TB_CONTACTS WHERE ID = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("i", $contactId);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-    $sql = "SELECT * FROM TB_CONTACTS WHERE ID = ?";
-    $stmt = self::$connection->prepare($sql);
-    $stmt->bind_param("i", $contactId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+            $contact = $result->fetch_assoc() ?: null;
 
-    $contact = $result->fetch_assoc() ?: null;
-
-    $stmt->close();
-    return $contact;
-}
+            $stmt->close();
+            return $contact;
+        }
 
 
 
@@ -351,12 +240,6 @@
 
             // session_start();
             header('Content-Type: application/json');
-
-            // // Verifica se o usuário está logado
-            // if (!isset($_SESSION['user'])) {
-            //     echo json_encode(["status" => "error", "message" => "Usuário não autenticado"]);
-            //     exit;
-            // }
 
             // Busca ID do usuário logado
             $email = $this->user->getEmailAddress();
@@ -371,7 +254,7 @@
             $stmt->close();
 
             if (!$user_id) {
-                echo json_encode(["status" => "error", "message" => "Usuário não encontrado"]);
+                echo json_encode(["status" => "error", "message" => "Usuário não encontrado"], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
                 exit;
             }
 
@@ -399,19 +282,91 @@
             return $this->list();
         }
 
+        private function update(){
+
+            // include_once "../../config/database.php";
+            // include_once "../auth/check_session.php";
+
+            header('Content-Type: application/json');
+
+            // $input = json_decode(file_get_contents('php://input'), true);
+
+            // if (!$input || !isset($input['id'])) {
+            //     echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido']);
+            //     exit;
+            // }
+
+            // $contactId = intval($input['id']);
+            // $name      = trim($input['name'] ?? '');
+            // $email     = trim($input['email'] ?? '');
+            // $phone     = trim($input['phone'] ?? '');
+            // $category  = trim($input['category'] ?? 'Outros');
+            // $notes     = trim($input['notes'] ?? '');
+
+            $contactId = $this->getContactID();
+            $name      = $this->name;
+            $email     = $this->email;
+            $phone     = $this->phone;
+            $category  = $this->category->value;
+            $notes     = $this->notes;
+
+            if ($contactId <= 0 || empty($name)) {
+                echo json_encode(['status' => 'error', 'message' => 'Dados inválidos'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                exit;
+            }
+
+            // Atualizar usando procedure
+            $sql = "CALL update_contact(?, ?, ?, ?, ?, ?, @success)";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("isssss", $contactId, $name, $email, $phone, $category, $notes);
+
+            if (!$stmt->execute()) {
+                echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato: ' . $stmt->error], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                $stmt->close();
+                self::$connection->close();
+                exit;
+            }
+
+            $stmt->close();
+
+            // Recupera valor da variável de saída @success
+            $result = self::$connection->query("SELECT @success AS success");
+            $row = $result->fetch_assoc();
+            $success = $row['success'] ?? 0;
+
+            if ($success) {
+                echo json_encode(['status' => 'success', 'message' => 'Contato atualizado com sucesso'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            }
+
+            self::$connection->close();
+        }
+
+
+        public function updateContact(){
+            return $this->update();
+        }
+
+        private function delete(){
+
+
+        }
+
+        public function deleteContact(){
+            
+        }
 
 
 
 
-        private function delete(){}
-        private function update(){}
         private function search(){}
 
 
 
 
-        public function deleteContact(){}
-        public function updateContact(){}
+
+
         public function searchContact(){}
 
         public static function closeConnection() {
@@ -434,4 +389,30 @@
 // $contact = new Contact();
 
 // echo json_encode($contact->getContact(1), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+    // 1️⃣ Carrega o usuário
+// $user = User::loadByEmail('edinei@email.com');
+
+// 2️⃣ Cria o contato com os novos dados (os campos que quer atualizar)
+// $contact = new Contact();
+
+// $dado = $contact->getContact(10);
+
+// $contact->setName($dado['NAME']);
+// $contact->setEmail($dado['EMAIL']);
+// $contact->setCategory($dado['CATEGORY']);
+// $contact->setPhone($dado['PHONE']);
+// $contact->setNote($dado['NOTES']);
+
+// $contact->setEmail('contatoexistente@email.com'); // esse e-mail deve existir no banco!
+// $contact->setName('Nome Atualizado');
+// $contact->setCategory('trabalho');
+// $contact->setPhone('01940028922');
+// $contact->setNote('Nota atualizada com sucesso.');
+
+// echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+// // 3️⃣ Chama a função de update
+// $contact->updateContact();
+
+    
 ?>

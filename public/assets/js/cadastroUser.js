@@ -89,7 +89,7 @@ async function sendRegisterRequest(userData) {
     if (result.status === "success") {
       alert(`Usuário cadastrado com sucesso! ID: ${result.user_id}`);
       form.reset();
-      // window.location.href = "./../pages/contacts.php";
+      window.location.href = "./../../app/views/contacts.php";
     } else {
       // Se o erro for email já cadastrado
       if (result.message === "Email já cadastrado") {
