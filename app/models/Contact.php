@@ -10,9 +10,10 @@
     use app\enums\Category;
     use app\core\Database;
 
-    class Contact {
+    class Contact implements \JsonSerializable{
     
         private ?User $user;
+        private ?int $id;
         private string $name;
         private string $email;
         private Category $category; 
@@ -42,6 +43,9 @@
             self::$connection = self::$connection;
         }
 
+        private function setId(?int $id){
+            $this->id = $id;
+        }
 
         public function setName(string $name){
             $this->name = $name;
@@ -59,8 +63,40 @@
             $this->phone = $phone;
         }
 
+        public function setUser(User $user){
+            $this->user = $user;
+        }
+
         public function setNote($note){
             $this->notes = $note;
+        }
+
+        public function getId(): ?int{
+            return $this->id;
+        }
+
+        public function getName(): string{
+            return $this->name;
+        }
+
+        public function getEmail(): string{
+            return $this->email;
+        }
+
+        public function getCategory(): Category{
+            return $this->category;
+        }
+
+        public function getPhone(): string{
+            return $this->phone;
+        }
+
+        public function getNotes(): string{
+            return $this->notes;
+        }
+
+        public function getUser(): ?User{
+            return $this->user;
         }
 
 
@@ -75,6 +111,71 @@
             }
 
                 return $contactId;
+        }
+
+        public static function loadByID(int $id): ?Contact{
+            // header('Content-Type: application/json');
+
+            // $sql = "SELECT * FROM TB_CONTACTS WHERE ID = ?";
+            // $stmt = self::$connection->prepare($sql);
+            // $stmt->bind_param("i", $id);
+            // $stmt->execute();
+            // $result = $stmt->get_result();
+
+            // $data = $result->fetch_assoc();
+
+            // if ($data) {
+            
+            //     $stmt->close();
+            //     return $data;
+            // }
+
+            // $stmt->close();
+            // return null;
+            $data = new self();
+            
+            $data = $data->getContactById($id);
+
+            // echo json_encode(['id' => $data['ID'], 'name' => $data['NAME'], 'email' => $data['EMAIL'], 'category' => $data['CATEGORY'], 'phone' => $data['PHONE'], 'notes' => $data['NOTES']], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact = new self();
+            $contact->setId($data['ID'] ?? null);
+            // echo json_encode(['id' => $contact->id], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact->setName($data['NAME'] ?? '');
+            // echo json_encode(['name' => $contact->name], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact->setEmail($data['EMAIL'] ?? '');
+            // echo json_encode(['email' => $contact->email], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact->setCategory($data['CATEGORY'] ?? 'Outros');
+            // echo json_encode(['category' => $contact->category], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact->setPhone($data['PHONE'] ?? '');
+            // echo json_encode(['phone' => $contact->phone], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contact->setNote($data['NOTES'] ?? '');
+            // echo json_encode(['note' => $contact->notes], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            // echo json_encode(['contactB' => $contact]);
+            // return (new Contact())->getContactById($id);
+            // echo json_encode(['contactB' => $contact->getEmail()], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            // echo json_encode(['contactB' => $contact->get], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            return  $contact;
+        }
+
+        public static function loadByEmail(string $email): ?array {
+            header('Content-Type: application/json');
+
+            $sql = "SELECT * FROM TB_CONTACTS WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $data = $result->fetch_assoc();
+
+            if ($data) {
+                
+                $stmt->close();
+                return $data;
+            }
+
+            $stmt->close();
+            return null;
         }
 
         private function getContacts(){
@@ -178,6 +279,8 @@
             if ($result && $row = $result->fetch_assoc()) {
                 if ($row['success']) {
                     // Retorna sucesso com o ID do contato
+                    $this->id = (int)$row['contact_id'];
+                    http_response_code(201);
                     echo json_encode([
                         "status" => "success",
                         "message" => "Contato adicionado com sucesso.",
@@ -287,14 +390,26 @@
             // include_once "../../config/database.php";
             // include_once "../auth/check_session.php";
 
+            
+            // $email = User::LoggedIn();
+
             header('Content-Type: application/json');
 
             // $input = json_decode(file_get_contents('php://input'), true);
 
+            // if (!isset($email)) {
+            //     echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido']);
+            //     exit;
+            // }
             // if (!$input || !isset($input['id'])) {
             //     echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido']);
             //     exit;
             // }
+
+            if (!isset($this->id)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                exit;
+            }
 
             // $contactId = intval($input['id']);
             // $name      = trim($input['name'] ?? '');
@@ -303,7 +418,8 @@
             // $category  = trim($input['category'] ?? 'Outros');
             // $notes     = trim($input['notes'] ?? '');
 
-            $contactId = $this->getContactID();
+            // $contactId = $this->getContactID();
+            $contactId = $this->id;
             $name      = $this->name;
             $email     = $this->email;
             $phone     = $this->phone;
@@ -335,9 +451,9 @@
             $success = $row['success'] ?? 0;
 
             if ($success) {
-                echo json_encode(['status' => 'success', 'message' => 'Contato atualizado com sucesso'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                return ['status' => 'success', 'message' => 'Contato atualizado com sucesso'];
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                return ['status' => 'error', 'message' => 'Falha ao atualizar contato'];
             }
 
             self::$connection->close();
@@ -345,7 +461,7 @@
 
 
         public function updateContact(){
-            return $this->update();
+            return json_encode($this->update(),JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         }
 
         private function delete(){
@@ -375,10 +491,101 @@
                 self::$connection = null;
             }
         }
+
+        public function jsonSerialize(): mixed {
+            // return [
+            //     'user' => [
+            //         'id' => $this->user?->getId(),
+            //         'name' => $this->user?->getName(),
+            //         'email' => $this->user?->getEmailAddress()
+            //     ],
+            //     'id' => $this->id,
+            //     'name' => $this->name,
+            //     'email' => $this->email,
+            //     'category' => $this->category->value,
+            //     'phone' => $this->phone,
+            //     'notes' => $this->notes
+            // ];
+
+            return [
+                'user' => $this->user,
+                'id' => $this->id,
+                'name' => $this->name,
+                'email' => $this->email,
+                'category' => $this->category->value,
+                'phone' => $this->phone,
+                'notes' => $this->notes
+            ];
+        }
     }
 
-//    $user = User::loadByEmail('edinei@email.com');
-// $contact = new Contact();
+    // $user = User::loadByEmail('edinei@email.com');
+    // $contact = new Contact();
+    // $contact = Contact::loadByEmail('isabela.ferreira@email.com');
+
+
+    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+
+
+
+
+
+
+    // $user = User::loadByEmail('edinei@email.com');
+    // $contact = new Contact();
+    // $contact = Contact::loadByID(2);
+    // $contact->setUser($user);
+    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    // $contact->setCategory('fornecedor');
+    // $retorno = $contact->updateContact();
+
+
+
+
+
+    
+    // $contact2 = $contact;
+         
+
+    // var_dump($contact);
+
+    // if ($contact instanceof Contact) {
+    //     echo "É um contact!"; // Verdadeiro
+    // }
+    
+    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    // echo json_encode($retorno, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    // echo json_encode(['contact => ' => $contact2], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 // $contact->addContact($user, 'edinei almeida', 'edinei@email.com23','família','19988354700','qwert');
 // $contact->addContact(1);

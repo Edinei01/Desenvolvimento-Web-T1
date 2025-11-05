@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertMsg = (msg) => alert(msg);
 
     // ============================
-// 1️⃣ Adicionar Contato (add_contact.php)
-// ============================
-const initAddContact = () => {
+    // 1️⃣ Adicionar Contato (add_contact.php)
+    // ============================
+    const initAddContact = () => {
     const formAddContacts = document.getElementById('add-contact-form');
     const btnAdd = document.getElementById('btn-add');
     if (!formAddContacts || !btnAdd) return;
@@ -60,8 +60,8 @@ const initAddContact = () => {
             }
         })
         .catch(err => console.error("Erro na requisição: ", err));
-    });
-};
+        });
+    };
 
 
     // ============================
@@ -168,9 +168,9 @@ const initAddContact = () => {
         )
             .then(data => {
 
-                console.log("contactId = "+contactId);
+                // console.log("contactId = "+contactId);
                 // alertMsg(JSON.stringify(data));
-                console.log(JSON.stringify(data, null, 2));
+                // console.log(JSON.stringify(data, null, 2));
                 if (data.status === 'success') {
                     // alertMsg("Contato carregado com sucesso! qwert");
                     contact = data.data;
@@ -203,21 +203,34 @@ const initAddContact = () => {
                 notes: notesInput.value
             };
 
+            // alert('vou testar aqui o category-> '+categoryInput.value);
+            // console.log("categoryInput.value = "+categoryInput.value);
+
             // alertMsg("Atualizando contato...");
             // console.log("aqui->"+JSON.stringify(updatedContact, null, 2));
 
-            fetchJSON('../includes/contacts/edit_contact.php', {
+            fetchJSON('./../../app/controllers/ContactController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({action: 'editContact', dada: updatedContact})
+                body: JSON.stringify({action: 'editContact', data: updatedContact})
             }).then(data => {
+
+                // alertMsg('Contato atualizado com sucesso!');
+                // console.log(JSON.stringify(data, null, 2));
+                // console.log("Resposta do servidor:\n" + JSON.stringify(data, null, 2));
+
                 if (data.status === 'success') {
+                    // alertMsg('Contato atualizado com sucesso!');
                     alertMsg('Contato atualizado com sucesso!');
-                    // window.location.href = 'contacts.php';
+                    console.log("Resposta do servidor:\n" + JSON.stringify(data, null, 2));
+                    window.location.href = 'contacts.php';
                 } else {
                     alertMsg('Erro ao atualizar: ' + (data.message || 'Erro desconhecido'));
                 }
-            }).catch(err => console.error('Erro ao atualizar contato:', err));
+            }).catch(err => {
+                console.error('Erro ao atualizar contato:', err)
+                console.log(err);
+            });
         });
     };
 
@@ -241,7 +254,8 @@ const initAddContact = () => {
                     body: JSON.stringify({ action: 'logout' })
                 });
 
-                if (data.status === 'success') {
+                if (data.status === 'success') 
+                    {
                     window.location.href = './../../public/index.php';
                 } else {
                     alertMsg('Falha no logout: ' + (data.message || 'erro desconhecido'));

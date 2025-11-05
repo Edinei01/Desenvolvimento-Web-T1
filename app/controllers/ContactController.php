@@ -1,4 +1,5 @@
 <?php
+    
 
     namespace app\Controllers;
 
@@ -59,6 +60,14 @@
                     break;
 
                 case 'editContact':
+                   
+                    
+                   
+                    // $this->sendResponse([
+                    //     'status' => 'success',
+                    //     'message' => 'Edição de contato ainda não implementada.',
+                    //     'data' => $dados
+                    // ]);
                     $this->editContact();
                     break;
 
@@ -206,9 +215,53 @@
          * Editar contato 
          */
         private function editContact() {
+
+            session_start();
+            
+            $dados = $this->input['data'] ?? [];
+
+            if (!isset($_SESSION['user'])) {
+                $this->sendResponse([
+                    'status' => 'error',
+                    'message' => "Usuário não logado."
+                ]);
+                return;
+            }
+
+            $user = User::loadByEmail($_SESSION['user']);
+                   
+            $contact = new Contact();
+     
+            $contact = Contact::loadByID($dados['id']);
+            
+            $contact->setUser($user);
+
+            if (!$contact) {
+                $this->sendResponse([
+                    'status' => 'error',
+                    'message' => "Contato não encontrado."
+                ]);
+                return;
+            }
+
+
+            $contact->setName($dados['name'] ?? $contact->getName());
+            $contact->setEmail($dados['email'] ?? $contact->getEmail());
+            $contact->setPhone($dados['phone'] ?? $contact->getPhone());
+            $contact->setCategory(mb_strtolower($dados['category']) ?? $contact->getCategory());
+            $contact->setNote($dados['notes'] ?? $contact->getNotes());
+            
+            $data =  $contact->updateContact();
+
+            // echo json_encode($data);
+
+            // exit;
+
+            // $contact->updateContact();
+
             $this->sendResponse([
                 'status' => 'success',
-                'message' => 'Edição de contato ainda não implementada.'
+                'message' => 'Edição de contato realizada com sucesso.'
             ]);
         }
 
