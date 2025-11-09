@@ -9,6 +9,7 @@
     use app\models\User;
     use app\enums\Category;
     use app\core\Database;
+    use Exception;
 
     class Contact implements \JsonSerializable{
     
@@ -114,46 +115,18 @@
         }
 
         public static function loadByID(int $id): ?Contact{
-            // header('Content-Type: application/json');
-
-            // $sql = "SELECT * FROM TB_CONTACTS WHERE ID = ?";
-            // $stmt = self::$connection->prepare($sql);
-            // $stmt->bind_param("i", $id);
-            // $stmt->execute();
-            // $result = $stmt->get_result();
-
-            // $data = $result->fetch_assoc();
-
-            // if ($data) {
-            
-            //     $stmt->close();
-            //     return $data;
-            // }
-
-            // $stmt->close();
-            // return null;
+           
             $data = new self();
             
             $data = $data->getContactById($id);
 
-            // echo json_encode(['id' => $data['ID'], 'name' => $data['NAME'], 'email' => $data['EMAIL'], 'category' => $data['CATEGORY'], 'phone' => $data['PHONE'], 'notes' => $data['NOTES']], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact = new self();
             $contact->setId($data['ID'] ?? null);
-            // echo json_encode(['id' => $contact->id], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact->setName($data['NAME'] ?? '');
-            // echo json_encode(['name' => $contact->name], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact->setEmail($data['EMAIL'] ?? '');
-            // echo json_encode(['email' => $contact->email], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact->setCategory($data['CATEGORY'] ?? 'Outros');
-            // echo json_encode(['category' => $contact->category], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact->setPhone($data['PHONE'] ?? '');
-            // echo json_encode(['phone' => $contact->phone], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $contact->setNote($data['NOTES'] ?? '');
-            // echo json_encode(['note' => $contact->notes], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            // echo json_encode(['contactB' => $contact]);
-            // return (new Contact())->getContactById($id);
-            // echo json_encode(['contactB' => $contact->getEmail()], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            // echo json_encode(['contactB' => $contact->get], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             return  $contact;
         }
 
@@ -219,7 +192,6 @@
             return $this->getContactById($id_contact);
         }
 
-
         public function getContactID(): ?int{
             
             $email = $this->email;
@@ -231,9 +203,7 @@
             $stmt->bind_result($id);
             $stmt->fetch();
             $stmt->close();
- 
-
-            
+             
             return $id;
         }
 
@@ -337,8 +307,6 @@
             return $contact;
         }
 
-
-
         private function list(): array{
 
             // session_start();
@@ -387,38 +355,13 @@
 
         private function update(){
 
-            // include_once "../../config/database.php";
-            // include_once "../auth/check_session.php";
-
-            
-            // $email = User::LoggedIn();
-
             header('Content-Type: application/json');
-
-            // $input = json_decode(file_get_contents('php://input'), true);
-
-            // if (!isset($email)) {
-            //     echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido']);
-            //     exit;
-            // }
-            // if (!$input || !isset($input['id'])) {
-            //     echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido']);
-            //     exit;
-            // }
 
             if (!isset($this->id)) {
                 echo json_encode(['status' => 'error', 'message' => 'ID do contato não fornecido'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
                 exit;
             }
 
-            // $contactId = intval($input['id']);
-            // $name      = trim($input['name'] ?? '');
-            // $email     = trim($input['email'] ?? '');
-            // $phone     = trim($input['phone'] ?? '');
-            // $category  = trim($input['category'] ?? 'Outros');
-            // $notes     = trim($input['notes'] ?? '');
-
-            // $contactId = $this->getContactID();
             $contactId = $this->id;
             $name      = $this->name;
             $email     = $this->email;
@@ -459,29 +402,62 @@
             self::$connection->close();
         }
 
-
         public function updateContact(){
             return json_encode($this->update(),JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         }
 
         private function delete(){
 
+            header('Content-Type: application/json; charset=UTF-8');
 
+            $contactId = $this->id;
+
+            try {
+                //  Prepara a chamada da procedure com parâmetro de saída
+                $sql = "CALL delete_contact(?, @resultado)";
+                $stmt =  self::$connection->prepare($sql);
+                if (!$stmt) {
+                    throw new Exception('Erro ao preparar statement: ' . self::$connection->error);
+                }
+
+                $stmt->bind_param("i", $contactId);
+                if (!$stmt->execute()) {
+                    throw new Exception('Erro ao executar statement: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                //  Busca o valor do parâmetro de saída
+                $result = self::$connection->query("SELECT @resultado AS resultado");
+                if (!$result) {
+                    throw new Exception('Erro ao buscar resultado: ' . self::$connection->error);
+                }
+
+                $row = $result->fetch_assoc();
+                $mensagem = $row['resultado'] ?? 'Erro desconhecido';
+
+                // Retorna JSON apropriado
+                if ($mensagem === 'deletado com sucesso') {
+                    return ['status' => 'success', 'message' => $mensagem];
+                } else {
+                    http_response_code(400);
+                    return ['status' => 'error', 'message' => $mensagem];
+                }
+
+            } catch (Exception $e) {
+                http_response_code(500);
+                return [
+                    'status' => 'error',
+                    'message' => 'Erro no servidor: ' . $e->getMessage()
+                ];
+            }
         }
 
         public function deleteContact(){
-            
+            // echo 'ENTROU AQUI'
+            return $this->delete();
         }
 
-
-
-
         private function search(){}
-
-
-
-
-
 
         public function searchContact(){}
 
@@ -493,20 +469,6 @@
         }
 
         public function jsonSerialize(): mixed {
-            // return [
-            //     'user' => [
-            //         'id' => $this->user?->getId(),
-            //         'name' => $this->user?->getName(),
-            //         'email' => $this->user?->getEmailAddress()
-            //     ],
-            //     'id' => $this->id,
-            //     'name' => $this->name,
-            //     'email' => $this->email,
-            //     'category' => $this->category->value,
-            //     'phone' => $this->phone,
-            //     'notes' => $this->notes
-            // ];
-
             return [
                 'user' => $this->user,
                 'id' => $this->id,
@@ -518,108 +480,4 @@
             ];
         }
     }
-
-    // $user = User::loadByEmail('edinei@email.com');
-    // $contact = new Contact();
-    // $contact = Contact::loadByEmail('isabela.ferreira@email.com');
-
-
-    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-
-
-
-
-
-
-    // $user = User::loadByEmail('edinei@email.com');
-    // $contact = new Contact();
-    // $contact = Contact::loadByID(2);
-    // $contact->setUser($user);
-    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    // $contact->setCategory('fornecedor');
-    // $retorno = $contact->updateContact();
-
-
-
-
-
-    
-    // $contact2 = $contact;
-         
-
-    // var_dump($contact);
-
-    // if ($contact instanceof Contact) {
-    //     echo "É um contact!"; // Verdadeiro
-    // }
-    
-    // echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    // echo json_encode($retorno, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    // echo json_encode(['contact => ' => $contact2], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-// $contact->addContact($user, 'edinei almeida', 'edinei@email.com23','família','19988354700','qwert');
-// $contact->addContact(1);
-
-
-// $user = User::loadByEmail($_SESSION['user'] ?? '');
-
-// $contact = new Contact();
-
-// echo json_encode($contact->getContact(1), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-    // 1️⃣ Carrega o usuário
-// $user = User::loadByEmail('edinei@email.com');
-
-// 2️⃣ Cria o contato com os novos dados (os campos que quer atualizar)
-// $contact = new Contact();
-
-// $dado = $contact->getContact(10);
-
-// $contact->setName($dado['NAME']);
-// $contact->setEmail($dado['EMAIL']);
-// $contact->setCategory($dado['CATEGORY']);
-// $contact->setPhone($dado['PHONE']);
-// $contact->setNote($dado['NOTES']);
-
-// $contact->setEmail('contatoexistente@email.com'); // esse e-mail deve existir no banco!
-// $contact->setName('Nome Atualizado');
-// $contact->setCategory('trabalho');
-// $contact->setPhone('01940028922');
-// $contact->setNote('Nota atualizada com sucesso.');
-
-// echo json_encode($contact, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-// // 3️⃣ Chama a função de update
-// $contact->updateContact();
-
-    
 ?>

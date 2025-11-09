@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-
     // ============================
     // 2️⃣ Listagem de contatos (contacts.php)
     // ============================
@@ -120,13 +119,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!contactId) return;
                 if (!confirm("Tem certeza que deseja deletar este contato?")) return;
-
+                
                 try {
-                    const data = await fetchJSON('../includes/contacts/delete_contact.php', {
+                    const data = await fetchJSON('./../../app/controllers/ContactController.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: contactId })
+                        body: JSON.stringify({action: 'deleteContact', id: contactId })
                     });
+
+                    console.log(JSON.stringify(data,null,2));
 
                     if (data.status === 'success') {
                         alertMsg(data.message || "Contato deletado com sucesso!");
@@ -156,9 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const phoneInput = editForm.querySelector('#phone');
         const categoryInput = editForm.querySelector('#category');
         const notesInput = editForm.querySelector('#notes');
-        
-        // Buscar dados do contato
-        // fetchJSON(`../includes/contacts/get_contacts.php?id=${contactId}`)
 
         fetchJSON(`./../../app/controllers/ContactController.php`,{
                 method: 'POST',
@@ -168,14 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
         )
             .then(data => {
 
-                // console.log("contactId = "+contactId);
-                // alertMsg(JSON.stringify(data));
-                // console.log(JSON.stringify(data, null, 2));
                 if (data.status === 'success') {
-                    // alertMsg("Contato carregado com sucesso! qwert");
+                    
                     contact = data.data;
-                    // const contact = data.data.find(c => String(c.ID) == String(contactId));
-                    // console.log("Contato encontrado:"+ contact);
+                    
                     if (contact) {
                         nameInput.value = contact.NAME || "";
                         emailInput.value = contact.EMAIL || "";
@@ -203,24 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 notes: notesInput.value
             };
 
-            // alert('vou testar aqui o category-> '+categoryInput.value);
-            // console.log("categoryInput.value = "+categoryInput.value);
-
-            // alertMsg("Atualizando contato...");
-            // console.log("aqui->"+JSON.stringify(updatedContact, null, 2));
-
             fetchJSON('./../../app/controllers/ContactController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({action: 'editContact', data: updatedContact})
             }).then(data => {
 
-                // alertMsg('Contato atualizado com sucesso!');
-                // console.log(JSON.stringify(data, null, 2));
-                // console.log("Resposta do servidor:\n" + JSON.stringify(data, null, 2));
-
                 if (data.status === 'success') {
-                    // alertMsg('Contato atualizado com sucesso!');
                     alertMsg('Contato atualizado com sucesso!');
                     console.log("Resposta do servidor:\n" + JSON.stringify(data, null, 2));
                     window.location.href = 'contacts.php';
@@ -325,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-
     // ============================
     // 7️⃣ Filtrar contatos carregados (input + botão)
     // ============================
@@ -358,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Evento ao clicar no botão
         searchBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // evita comportamento padrão se for botão de submit
+            e.preventDefault(); 
             filterContacts();
         });
     };

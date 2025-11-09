@@ -16,8 +16,6 @@
         private ?string $password;
         private static $connection = null;
 
-        
-
         // ---------- CONSTRUTOR ----------
         public function __construct(?string $name = null,?string $email = null, ?string $password = null) {
             $this->name = $name;
@@ -253,11 +251,9 @@
             ];
         }
 
-
         public function login(){
             return $this->loginUser();
         }
-
         
         public function deleteUser() {}
         
@@ -280,7 +276,6 @@
 
             return null;
         }
-
 
         // public function getUserIdByEmail(string $email): ?int {
         //     $sql = "SELECT ID FROM tb_user WHERE EMAIL = ?";
@@ -334,49 +329,3 @@
             }
         }
     }
-
-    // $users = [];
-    // echo 'com id = int';
-    // echo'<br>';
-    // for ($i = 1; $i < 15; $i++) {
-    //     $users[] = User::loadByID($i); // carrega pelo ID
-    // }
-
-    // // imprime os usuários carregados pelo ID
-    // foreach ($users as $user) {
-    //     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    //     echo '<br>';
-    // }
-
-    // $users2=[];
-    // echo 'com id = string';
-    // echo'<br>';
-    // for ($i = 1; $i < 15; $i++) {
-    //     $str = (string) $i;
-    //     $users2[] = User::loadByID($str); // carrega pelo ID
-    // }
-
-
-    // foreach ($users2 as $user) {
-    //     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    //     echo '<br>';
-    // }
-
-
-
-    // // carrega os mesmos usuários pelo e-mail usando os dados de $users
-    // $usersByEmail = [];
-    // foreach ($users as $user) {
-    //     $usersByEmail[] = User::loadByEmail($user->getEmailAddress());
-    // }
-
-    // echo '<br>Carregados pelo e-mail:<br>';
-
-    // // imprime os usuários carregados pelo e-mail
-    // foreach ($usersByEmail as $user) {
-    //     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    //     echo '<br>';
-    // }
-
-
-    // echo json_encode(User::LoggedIn(false), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);

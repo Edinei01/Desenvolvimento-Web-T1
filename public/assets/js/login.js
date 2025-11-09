@@ -5,7 +5,6 @@
 // Seleciona o formulário pelo ID 'login-form' no HTML
 const form = document.getElementById("login-form");
 
-
 // =====================
 // Funções de validação
 // =====================
@@ -35,7 +34,6 @@ function validateForm(email, password) {
   // Retorna true apenas se o email e a senha forem válidos
   return validateEmail(email) && validatePassword(password);
 }
-
 
 // =====================
 // Funções de manipulação de campos
@@ -83,7 +81,6 @@ function removeInputError(field) {
   });
 }
 
-
 // =====================
 // Função de requisição (Fetch)
 // =====================
@@ -127,7 +124,6 @@ function sendRequest(userObject) {
       console.error("Erro:", error);
     });
 }
-
 
 // =====================
 // Função principal de login
@@ -181,7 +177,6 @@ function login(formElement) {
     });
   }
 }
-
 
 // =====================
 // Inicialização

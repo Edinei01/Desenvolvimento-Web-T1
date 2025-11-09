@@ -1,0 +1,114 @@
+body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            padding: 30px;
+            position: relative;
+        }
+
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-add {
+            margin-bottom: 8px;
+        }
+
+        table {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        th,
+        td {
+            vertical-align: middle;
+        }
+
+        th i {
+            margin: 0 10px;
+        }
+
+        tr td span {
+            margin: 0 10px;
+        }
+
+        #btn-sair {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 992px) {
+            .table-responsive {
+                font-size: 0.95rem;
+            }
+
+            .btn {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .table-responsive table th,
+            .table-responsive table td {
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+
+            .btn-add {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            input {
+                padding: 12px 14px 12px 36px;
+                font-size: 0.9rem;
+            }
+
+            .contact-info {
+                font-size: 0.95rem;
+                gap: 12px;
+            }
+        }
+
+        /* Estilo para input de pesquisa */
+        #search-input {
+            border-radius: 8px 0 0 8px;
+        }
+
+        #btn-search {
+            border-radius: 0 8px 8px 0;
+        }

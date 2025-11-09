@@ -1,6 +1,5 @@
 <?php
     
-
     namespace app\Controllers;
 
     require_once __DIR__ . '/../models/Contact.php';
@@ -38,10 +37,9 @@
          * Método principal que decide a ação
          */
         private function handleRequest() {
-            // $action = $_GET['action'] ?? ($this->input['action'] ?? '');
+    
             $action = $_GET['action'] ?? ($this->input['action'] ?? '');
-            // echo json_encode(['action' => $action, 'id' => $this->input['id']], );
-            // exit;
+           
             switch ($action) {
                 case 'addContact':
                     $this->addContact();
@@ -61,13 +59,6 @@
 
                 case 'editContact':
                    
-                    
-                   
-                    // $this->sendResponse([
-                    //     'status' => 'success',
-                    //     'message' => 'Edição de contato ainda não implementada.',
-                    //     'data' => $dados
-                    // ]);
                     $this->editContact();
                     break;
 
@@ -155,9 +146,7 @@
 
             $result = $this->contact->listContact();
 
-        
             $this->sendResponse($result);
-
         }
 
         /**
@@ -188,22 +177,6 @@
             $this->contact = new Contact($user);
 
             $contact = $this->contact->getContact($this->input['id'] ?? 0);
-
-            // echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-            // return;
-            
-            // $this->sendResponse($result);
-
-
-
-            // $contact = new Contact();
-
-// $dado = $contact->getContact(10);
-            // $this->sendResponse([
-            //     'status' => 'success',
-            //     'message' => 'Edição de contato ainda não implementada.'
-            // ]);
 
             $this->sendResponse([
                 "status" => "success",
@@ -244,7 +217,6 @@
                 return;
             }
 
-
             $contact->setName($dados['name'] ?? $contact->getName());
             $contact->setEmail($dados['email'] ?? $contact->getEmail());
             $contact->setPhone($dados['phone'] ?? $contact->getPhone());
@@ -252,12 +224,6 @@
             $contact->setNote($dados['notes'] ?? $contact->getNotes());
             
             $data =  $contact->updateContact();
-
-            // echo json_encode($data);
-
-            // exit;
-
-            // $contact->updateContact();
 
             $this->sendResponse([
                 'status' => 'success',
@@ -289,8 +255,8 @@
                 ]);
                 return;
             }
+
             $contact = new Contact();
-            // $contact = $this->contact->getContactById($id);
             $contact = $contact->getContact($id);
 
             $this->sendResponse([
@@ -303,10 +269,38 @@
          * Deletar contato (implementação futura)
          */
         private function deleteContact() {
-            $this->sendResponse([
-                'status' => 'success',
-                'message' => 'Remoção de contato ainda não implementada.'
-            ]);
+
+            session_start();
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Método não permitido. Use POST.'
+                ]);
+                exit;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+    
+            if (!isset($_SESSION['user'])) {
+                $this->sendResponse([
+                    'status' => 'error',
+                    'message' => "Usuário não logado."
+                ]);
+                return;
+            }
+
+            $user = User::loadByEmail($_SESSION['user']);
+
+            // exit;
+            $contact = Contact::loadByID($input['id']);
+            $contact->setUser($user);
+          
+            $data = $contact->deleteContact();
+
+            // echo $data;
+            $this->sendResponse($data);
         }
 
         /**
