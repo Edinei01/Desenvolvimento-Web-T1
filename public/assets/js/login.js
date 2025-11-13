@@ -86,23 +86,22 @@ function removeInputError(field) {
 // =====================
 
 function sendRequest(userObject) {
-  // Envia os dados para o servidor usando Fetch API
+    // Envia os dados para o servidor usando Fetch API
   
-  fetch("./../../app/controllers/UserController.php", {
-    method: "POST", // Método de envio
-    headers: {
-      "Content-Type": "application/json", // Especifica o tipo do conteúdo enviado
-    },
-    body: JSON.stringify(userObject), // Converte o objeto JS para JSON
-  })
+    fetch("./../../app/controllers/UserController.php", {
+      method: "POST", 
+      headers: {
+        "Content-Type": "application/json", // Especifica o tipo do conteúdo enviado
+      },
+      body: JSON.stringify(userObject), // Converte o objeto JS para JSON
+    })
     // Converte a resposta recebida do servidor em objeto JS
     .then(response => response.json())
     // Manipula o resultado recebido
     .then((result) => {
-      
+
       // console.log(result); 
       console.log(JSON.stringify(result, null, 2));
-
       // Se o login foi bem-sucedido
       if (result.status === "success") {
         inputClear(); // Limpa os campos
@@ -122,6 +121,7 @@ function sendRequest(userObject) {
     // Captura erros de rede ou falhas na requisição
     .catch((error) => {
       console.error("Erro:", error);
+      console.log("é aqui" + error);
     });
 }
 

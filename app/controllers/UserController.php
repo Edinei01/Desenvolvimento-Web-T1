@@ -15,14 +15,12 @@ class UserController {
 
         // Pega o JSON recebido
         $this->input = json_decode(file_get_contents('php://input'), true);
-
         // Cria instância do User com dados (se existirem)
         $this->user = new User(
             $this->input['name'] ?? '',
             $this->input['email'] ?? '',
             $this->input['password'] ?? ''
         );
-
     }
 
     /**
@@ -30,7 +28,6 @@ class UserController {
      */
     private function handleRequest() {
         $action = $this->input['action'] ?? '';
-
         switch ($action) {
             case 'register':
                 $this->register();

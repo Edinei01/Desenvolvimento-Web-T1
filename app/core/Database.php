@@ -4,8 +4,10 @@
 
     require_once __DIR__ . '/../../config/Config.php';
 
-    use mysqli;
     use Config\Config;
+    use Exception;
+    use PDO;
+    use PDOException;
 
     class Database {
 
@@ -13,33 +15,38 @@
         private $user = Config::DB_USER;
         private $pass = Config::DB_PASS;
         private $dbName = Config::DB_NAME;
-        private $conn = null;
-        private static $instance = null;
+        private ?PDO $conn = null;
+        private static ?Database $instance = null;
 
         // Construtor privado
         private function __construct() {
-            $this->conn = new mysqli($this->host, $this->user, $this->pass, $this->dbName);
-
-            if ($this->conn->connect_error) {
-                die("Connection failed: " . $this->conn->connect_error);
+            try {
+                $this->conn = new PDO("mysql:host=$this->host;dbname=$this->dbName", $this->user, $this->pass);
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                die("Connection failed: " .$e->getMessage());
+            } catch(Exception $e){
+                die("Generic error: " .$e->getMessage());
             }
         }
 
-        // Método estático para retornar a conexão
-        public static function getConnection() {
+        public static function getConnection(): PDO {
             if (self::$instance === null) {
                 self::$instance = new self();
             }
             return self::$instance->conn;
         }
-
-        // Método estático para fechar a conexão
-        public static function setCloseConnection() {
-            if (isset(self::$instance) && isset(self::$instance->conn)) {
-                self::$instance->conn->close();
-                self::$instance->conn = null;
-                self::$instance = null;
-            }
-        }
     }
+
+    // $con = Database::getConnection();
+    // $id = 2;
+    // $sql = "SELECT * FROM `tb_user` WHERE id = :id";
+    // $stmt = $con->prepare($sql);
+    // $stmt->bindParam(':id', $id);
+    // // $id = 1;
+    // $stmt->execute();
+    // $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // print_r($result);
+    // echo json_encode($result,JSON_PRETTY_PRINT);
 ?>

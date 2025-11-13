@@ -1,313 +1,334 @@
 <?php
 
-namespace app\models;
+    namespace app\models;
 
-require_once __DIR__ . '/../core/Database.php';
-
-
-use app\core\Database;
+    require_once __DIR__ . '/../core/Database.php';
 
 
-class User implements \JsonSerializable{
+    use app\core\Database;
 
-    private int $id;
-    private ?string $name;
-    private ?string $email;
-    private ?string $password;
-    private static $connection = null;
 
-    
+    class User implements \JsonSerializable{
 
-    // ---------- CONSTRUTOR ----------
-    public function __construct(?string $name = null,?string $email = null, ?string $password = null) {
-        $this->name = $name;
-        $this->email = $email;
-        $this->password = $password;
+        private int $id;
+        private ?string $name;
+        private ?string $email;
+        private ?string $password;
+        private static $connection = null;
 
-        // Abre a conexão se ainda não existir
-        if (!self::$connection) {
-            self::$connection = Database::getConnection();
+        // ---------- CONSTRUTOR ----------
+        public function __construct(?string $name = null,?string $email = null, ?string $password = null) {
+            $this->name = $name;
+            $this->email = $email;
+            $this->password = $password;
+
+            // Abre a conexão se ainda não existir
+            if (!self::$connection) {
+                self::$connection = Database::getConnection();
+            }
         }
 
-       self::$connection = self::$connection;
-    }
-
-    // ---------- SETTERS ----------
-    public function setName(string $name) {
-        $this->name = $name;
-    }
-
-    public function setEmailAddress(string $email) {
-        $this->email = $email;
-    }
-
-    public function setPassword(string $password) {
-        $this->password = $password;
-    }
-
-    // ---------- GETTERS ----------
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getId():int{
-        return $this->id;
-    }
-
-    public function getEmailAddress() {
-        return $this->email;
-    }
-
-    public function getPassword() {
-        return $this->password;
-    }
-
-    public static function loadByID(int $id): User {
-        $userObj = new self();
-        return $userObj->searchUserByID($id);
-    }
-
-    public static function loadByEmail(string $email){
-        $userObj = new self();
-        return $userObj->searchUserByEmail($email);
-    }
-
-
-    // ---------- MÉTODOS PRIVADOS ----------
-    private function isEmptyFields(...$fields){
-        foreach ($fields as $field) {
-            if (empty($field)) return true;
+        // ---------- SETTERS ----------
+        public function setName(string $name) {
+            $this->name = $name;
         }
-        return false;
-    }
 
-    private function isSanitized() {
-        $this->name = htmlspecialchars(trim($this->name));
-        $this->email = htmlspecialchars(trim($this->email));
-        $this->password = htmlspecialchars(trim($this->password));
+        public function setEmailAddress(string $email) {
+            $this->email = $email;
+        }
 
-        if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            echo " E-mail inválido";
+        public function setPassword(string $password) {
+            $this->password = $password;
+        }
+
+        // ---------- GETTERS ----------
+        public function getName() {
+            return $this->name;
+        }
+
+        public function getId():int{
+            return $this->id;
+        }
+
+        public function getEmailAddress() {
+            return $this->email;
+        }
+
+        public function getPassword() {
+            return $this->password;
+        }
+
+        public static function loadByID(int $id): User {
+            $userObj = new self();
+            return $userObj->searchUserByID($id);
+        }
+
+        public static function loadByEmail(string $email): User{
+            $userObj = new self();
+            return $userObj->searchUserByEmail($email);
+        }
+
+        public static function LoggedIn(bool $redirect = true): ?string {
+            session_start();
+
+            if (!isset($_SESSION['user'])) {
+                if ($redirect) {
+                    header("Location: ../../public/index.php");
+                    exit;
+                } else {
+                    echo json_encode([
+                        "status" => "error",
+                        "message" => "Usuário não logado."
+                    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                    exit;
+                }
+            }
+            return $_SESSION['user'];
+        }
+
+
+        // ---------- MÉTODOS PRIVADOS ----------
+        private function isEmptyFields(...$fields){
+            foreach ($fields as $field) {
+                if (empty($field)) return true;
+            }
             return false;
         }
 
-        return true;
-    }
+        private function isSanitized() {
+            $this->name = htmlspecialchars(trim($this->name));
+            $this->email = htmlspecialchars(trim($this->email));
+            $this->password = htmlspecialchars(trim($this->password));
 
-    private function existsEmail() {
-        $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("s", $this->email);
-        $stmt->execute();
-        $stmt->store_result();
+            if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+                echo " E-mail inválido";
+                return false;
+            }
 
-        $exists = $stmt->num_rows > 0;
-        $stmt->close();
-
-        return $exists;
-    }
-
-    private function insertUser() {
-        $sql = "CALL insert_user(?, ?, ?, @p_id, @success)";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("sss", $this->name, $this->email, $this->password);
-        $stmt->execute();
-        $stmt->close();
-
-        $sql = "SELECT @p_id AS user_id, @success AS success";
-        $result = self::$connection->query($sql);
-        $row = $result->fetch_assoc();
-        $this->id = $row['user_id'];
-        return $row;
-    }
-
-    // ---------- MÉTODO PÚBLICO ----------
-    public function createUser() {
-        header('Content-Type: application/json; charset=utf-8');
-
-        // Valida campos
-        if ($this->isEmptyFields($this->name, $this->email, $this->password) || !$this->isSanitized()) {
-            echo json_encode(['status' => 'error', 'message' => 'Campos inválidos'], JSON_UNESCAPED_UNICODE);
-            return;
+            return true;
         }
 
-        // Verifica se email já existe
-        if ($this->existsEmail()) {
-            echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
+        private function existsEmail() {
+            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $this->email);
+            $stmt->execute();
+            $stmt->store_result();
+
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+
+            return $exists;
         }
 
-        // Insere usuário
-        $row = $this->insertUser();
-        $p_id = $row['user_id'];
-        $success = $row['success'];
+        private function insertUser() {       
+            $name = $this->name;
+            $email = $this->email;
+            $password = $this->password;
 
-        // Retorno
-        if ($success) {
-            session_start();
-            $_SESSION['user'] = $this->email;
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Usuário inserido com sucesso!',
-                'user_id' => $p_id
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Falha ao cadastrar usuário'
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        }
-    }
+            $sql = "CALL insert_user(?, ?, ?, @p_id, @success)";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("sss", $name, $email, $password);
+            $stmt->execute();
+            $stmt->close();
 
-    private function loginUser(){
-
-        if(!$this->isSanitized()){
-            echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
-            exit;
+            $sql = "SELECT @p_id AS user_id, @success AS success";
+            $result = self::$connection->query($sql);
+            $row = $result->fetch_assoc();
+            $this->id = $row['user_id'];
+            return $row;
         }
 
-        // Valida campos obrigatórios
-        if ($this->isEmptyFields($this->email, $this->password)) {
-            echo json_encode(['status' => 'error', 'message' => 'Email and password are required']);
-            exit;
+        // ---------- MÉTODO PÚBLICO ----------
+        public function registerUser() {
+            header('Content-Type: application/json; charset=utf-8');
+
+            // Valida campos
+            if ($this->isEmptyFields($this->name, $this->email, $this->password) || !$this->isSanitized()) {
+                echo json_encode(['status' => 'error', 'message' => 'Campos inválidos'], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // Verifica se email já existe
+            if ($this->existsEmail()) {
+                echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // Insere usuário
+            $row = $this->insertUser();
+            $p_id = $row['user_id'];
+            $success = $row['success'];
+
+            // Retorno
+            if ($success) {
+                session_start();
+                $_SESSION['user'] = $this->email;
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Usuário inserido com sucesso!',
+                    'user_id' => $p_id
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Falha ao cadastrar usuário'
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            }
         }
 
-        // Chama a função no MySQL
-        $sql = "SELECT check_login_func(?, ?) AS login_status";
-        $stmt = self::$connection->stmt_init();
-        $stmt->prepare($sql);
-        $stmt->bind_param('ss', $this->email, $this->password);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        self::$connection->close();
+        private function loginUser(){
 
-        $status = $row['login_status'];
+            if(!$this->isSanitized()){
+                echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
+                exit;
+            }
 
-        // Retorna JSON de acordo com o resultado
-        if ($status === 'ok') {
-            session_start();
-            $_SESSION['user'] = $this->email;
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Login successful',
-                'invalid_field' => null
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Invalid username or password',
-                'invalid_field' => $status // 'email' ou 'password'
-            ]);
-        }
-    }
+            // Valida campos obrigatórios
+            if ($this->isEmptyFields($this->email, $this->password)) {
+                echo json_encode(['status' => 'error', 'message' => 'Email and password are required']);
+                exit;
+            }
 
-    public function login(){
-        return $this->loginUser();
-    }
-
-    
-    public function deleteUser() {}
-    
-    private function searchUserByID(int $id): ?User {
-        $sql = "SELECT * FROM TB_USER WHERE ID = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-
-        if ($row) {
-            $user = new User($row['NAME'], $row['EMAIL']);
-            $user->id = $row['ID'];
-            // $user->setName($row['NAME']);
-            // $user->setEmailAddress($row['EMAIL']);
-            return $user;
-        }
-
-        return null;
-    }
-
-
-    public function getUserIdByEmail(string $email): ?int {
-        $sql = "SELECT ID FROM tb_user WHERE EMAIL = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $userId = null;
-        if ($result && $row = $result->fetch_assoc()) {
-            $userId = (int) $row['ID'];
-        }
-
-        $stmt->close(); 
-        return $userId;
-    }
-
-    private function searchUserByEmail(string $email):User|null{
-        $sql = "SELECT * FROM TB_USER WHERE EMAIL = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-
-        if ($row) {
-            $user = new User($row['NAME'], $row['EMAIL']);
-            $user->id = $row['ID'];
-            // $user->setName($row['NAME']);
-            // $user->setEmailAddress($row['EMAIL']);
-            return $user;
-        }
-
-        return null;
-    }
-    
-    public function jsonSerialize(): mixed {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email
-        ];
-    }
-
-    // ---------- MÉTODO ESTÁTICO PARA FECHAR A CONEXÃO ----------
-    public static function closeConnection() {
-        if (self::$connection) {
+            // Chama a função no MySQL
+            $sql = "SELECT check_login_func(?, ?) AS login_status";
+            $stmt = self::$connection->stmt_init();
+            $stmt->prepare($sql);
+            $stmt->bind_param('ss', $this->email, $this->password);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
             self::$connection->close();
-            self::$connection = null;
+
+            $status = $row['login_status'];
+
+            // Retorna JSON de acordo com o resultado
+            if ($status === 'ok') {
+                session_start();
+                $_SESSION['user'] = $this->email;
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Login successful',
+                    'invalid_field' => null
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Invalid username or password',
+                    'invalid_field' => $status 
+                ]);
+            }
+        }
+
+        public function logout(): array {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            // Limpa sessão
+            $_SESSION = [];
+
+            // Remove cookie
+            if (ini_get('session.use_cookies')) {
+                $params = session_get_cookie_params();
+                setcookie(
+                    session_name(),
+                    '',
+                    time() - 42000,
+                    $params['path'],
+                    $params['domain'],
+                    $params['secure'],
+                    $params['httponly']
+                );
+            }
+
+            session_destroy();
+
+            return [
+                'status' => 'success',
+                'message' => 'Sessão destruída, usuário deslogado'
+            ];
+        }
+
+        public function login(){
+            return $this->loginUser();
+        }
+        
+        public function deleteUser() {}
+        
+        private function searchUserByID(int|string $id): ?User {
+            $user_id = (int) $id;
+
+            $sql = "SELECT * FROM TB_USER WHERE ID = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+
+            if ($row) {
+                $user = new User($row['NAME'], $row['EMAIL']);
+                $user->id = $row['ID'];
+                return $user;
+            }
+
+            return null;
+        }
+
+        // public function getUserIdByEmail(string $email): ?int {
+        //     $sql = "SELECT ID FROM tb_user WHERE EMAIL = ?";
+        //     $stmt = self::$connection->prepare($sql);
+        //     $stmt->bind_param("s", $email);
+        //     $stmt->execute();
+        //     $result = $stmt->get_result();
+
+        //     $userId = null;
+        //     if ($result && $row = $result->fetch_assoc()) {
+        //         $userId = (int) $row['ID'];
+        //     }
+
+        //     $stmt->close(); 
+        //     return $userId;
+        // }
+
+        private function searchUserByEmail(string $email): ?User{
+            $sql = "SELECT * FROM TB_USER WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+
+            if ($row) {
+                $user = new User($row['NAME'], $row['EMAIL']);
+                $user->id = $row['ID'];
+                // $user->setName($row['NAME']);
+                // $user->setEmailAddress($row['EMAIL']);
+                return $user;
+            }
+
+            return null;
+        }
+        
+        public function jsonSerialize(): mixed {
+            return [
+                'id' => $this->id,
+                'name' => $this->name,
+                'email' => $this->email
+            ];
+        }
+
+        // ---------- MÉTODO ESTÁTICO PARA FECHAR A CONEXÃO ----------
+        public static function closeConnection() {
+            if (self::$connection) {
+                self::$connection->close();
+                self::$connection = null;
+            }
         }
     }
-}
-
-// $users = [];
-// for ($i = 1; $i < 15; $i++) {
-//     $users[] = User::loadByID($i); // carrega pelo ID
-// }
-
-// // imprime os usuários carregados pelo ID
-// foreach ($users as $user) {
-//     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-//     echo '<br>';
-// }
-
-// // carrega os mesmos usuários pelo e-mail usando os dados de $users
-// $usersByEmail = [];
-// foreach ($users as $user) {
-//     $usersByEmail[] = User::loadByEmail($user->getEmailAddress());
-// }
-
-// echo '<br>Carregados pelo e-mail:<br>';
-
-// // imprime os usuários carregados pelo e-mail
-// foreach ($usersByEmail as $user) {
-//     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-//     echo '<br>';
-// }
 
 
 
@@ -325,328 +346,383 @@ class User implements \JsonSerializable{
 
 
 
-<?php
-
-namespace app\models;
-
-require_once __DIR__ . '/../core/Database.php';
 
 
-use app\core\Database;
 
 
-class User implements \JsonSerializable{
 
-    private int $id;
-    private ?string $name;
-    private ?string $email;
-    private ?string $password;
-    private static $connection = null;
 
-    
 
-    // ---------- CONSTRUTOR ----------
-    public function __construct(?string $name = null,?string $email = null, ?string $password = null) {
-        $this->name = $name;
-        $this->email = $email;
-        $this->password = $password;
 
-        // Abre a conexão se ainda não existir
-        if (!self::$connection) {
-            self::$connection = Database::getConnection();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <?php
+
+    namespace app\models;
+
+    require_once __DIR__ . '/../core/Database.php';
+
+
+    use app\core\Database;
+
+
+    class User implements \JsonSerializable{
+
+        private int $id;
+        private ?string $name;
+        private ?string $email;
+        private ?string $password;
+        private static $connection = null;
+
+        // ---------- CONSTRUTOR ----------
+        public function __construct(?string $name = null,?string $email = null, ?string $password = null) {
+            $this->name = $name;
+            $this->email = $email;
+            $this->password = $password;
+
+            // Abre a conexão se ainda não existir
+            if (!self::$connection) {
+                self::$connection = Database::getConnection();
+            }
         }
-    }
 
-    // ---------- SETTERS ----------
-    public function setName(string $name) {
-        $this->name = $name;
-    }
-
-    public function setEmailAddress(string $email) {
-        $this->email = $email;
-    }
-
-    public function setPassword(string $password) {
-        $this->password = $password;
-    }
-
-    // ---------- GETTERS ----------
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getId():int{
-        return $this->id;
-    }
-
-    public function getEmailAddress() {
-        return $this->email;
-    }
-
-    public function getPassword() {
-        return $this->password;
-    }
-
-    public static function loadByID(int $id): User {
-        $userObj = new self();
-        return $userObj->searchUserByID($id);
-    }
-
-    public static function loadByEmail(string $email): User{
-        $userObj = new self();
-        return $userObj->searchUserByEmail($email);
-    }
-
-
-    // ---------- MÉTODOS PRIVADOS ----------
-    private function isEmptyFields(...$fields){
-        foreach ($fields as $field) {
-            if (empty($field)) return true;
+        // ---------- SETTERS ----------
+        public function setName(string $name) {
+            $this->name = $name;
         }
-        return false;
-    }
 
-    private function isSanitized() {
-        $this->name = htmlspecialchars(trim($this->name));
-        $this->email = htmlspecialchars(trim($this->email));
-        $this->password = htmlspecialchars(trim($this->password));
+        public function setEmailAddress(string $email) {
+            $this->email = $email;
+        }
 
-        if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            echo " E-mail inválido";
+        public function setPassword(string $password) {
+            $this->password = $password;
+        }
+
+        // ---------- GETTERS ----------
+        public function getName() {
+            return $this->name;
+        }
+
+        public function getId():int{
+            return $this->id;
+        }
+
+        public function getEmailAddress() {
+            return $this->email;
+        }
+
+        public function getPassword() {
+            return $this->password;
+        }
+
+        public static function loadByID(int $id): User {
+            $userObj = new self();
+            return $userObj->searchUserByID($id);
+        }
+
+        public static function loadByEmail(string $email): User{
+            $userObj = new self();
+            return $userObj->searchUserByEmail($email);
+        }
+
+        public static function LoggedIn(bool $redirect = true): ?string {
+            session_start();
+
+            if (!isset($_SESSION['user'])) {
+                if ($redirect) {
+                    header("Location: ../../public/index.php");
+                    exit;
+                } else {
+                    echo json_encode([
+                        "status" => "error",
+                        "message" => "Usuário não logado."
+                    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                    exit;
+                }
+            }
+            return $_SESSION['user'];
+        }
+
+
+        // ---------- MÉTODOS PRIVADOS ----------
+        private function isEmptyFields(...$fields){
+            foreach ($fields as $field) {
+                if (empty($field)) return true;
+            }
             return false;
         }
 
-        return true;
-    }
+        private function isSanitized() {
+            $this->name = htmlspecialchars(trim($this->name));
+            $this->email = htmlspecialchars(trim($this->email));
+            $this->password = htmlspecialchars(trim($this->password));
 
-    private function existsEmail() {
-        $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("s", $this->email);
-        $stmt->execute();
-        $stmt->store_result();
+            if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+                echo " E-mail inválido";
+                return false;
+            }
 
-        $exists = $stmt->num_rows > 0;
-        $stmt->close();
-
-        return $exists;
-    }
-
-    private function insertUser() {
-        $sql = "CALL insert_user(?, ?, ?, @p_id, @success)";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("sss", $this->name, $this->email, $this->password);
-        $stmt->execute();
-        $stmt->close();
-
-        $sql = "SELECT @p_id AS user_id, @success AS success";
-        $result = self::$connection->query($sql);
-        $row = $result->fetch_assoc();
-        $this->id = $row['user_id'];
-        return $row;
-    }
-
-    // ---------- MÉTODO PÚBLICO ----------
-    public function createUser() {
-        header('Content-Type: application/json; charset=utf-8');
-
-        // Valida campos
-        if ($this->isEmptyFields($this->name, $this->email, $this->password) || !$this->isSanitized()) {
-            echo json_encode(['status' => 'error', 'message' => 'Campos inválidos'], JSON_UNESCAPED_UNICODE);
-            return;
+            return true;
         }
 
-        // Verifica se email já existe
-        if ($this->existsEmail()) {
-            echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
+        private function existsEmail() {
+            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $this->email);
+            $stmt->execute();
+            $stmt->store_result();
+
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+
+            return $exists;
         }
 
-        // Insere usuário
-        $row = $this->insertUser();
-        $p_id = $row['user_id'];
-        $success = $row['success'];
+        private function insertUser() {       
+            $name = $this->name;
+            $email = $this->email;
+            $password = $this->password;
 
-        // Retorno
-        if ($success) {
-            session_start();
-            $_SESSION['user'] = $this->email;
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Usuário inserido com sucesso!',
-                'user_id' => $p_id
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Falha ao cadastrar usuário'
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        }
-    }
+            $sql = "CALL insert_user(?, ?, ?, @p_id, @success)";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("sss", $name, $email, $password);
+            $stmt->execute();
+            $stmt->close();
 
-    private function loginUser(){
-
-        if(!$this->isSanitized()){
-            echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
-            exit;
+            $sql = "SELECT @p_id AS user_id, @success AS success";
+            $result = self::$connection->query($sql);
+            $row = $result->fetch_assoc();
+            $this->id = $row['user_id'];
+            return $row;
         }
 
-        // Valida campos obrigatórios
+        // ---------- MÉTODO PÚBLICO ----------
+        public function registerUser() {
+            header('Content-Type: application/json; charset=utf-8');
+
+            // Valida campos
+            if ($this->isEmptyFields($this->name, $this->email, $this->password) || !$this->isSanitized()) {
+                echo json_encode(['status' => 'error', 'message' => 'Campos inválidos'], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // Verifica se email já existe
+            if ($this->existsEmail()) {
+                echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // Insere usuário
+            $row = $this->insertUser();
+            $p_id = $row['user_id'];
+            $success = $row['success'];
+
+            // Retorno
+            if ($success) {
+                session_start();
+                $_SESSION['user'] = $this->email;
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Usuário inserido com sucesso!',
+                    'user_id' => $p_id
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Falha ao cadastrar usuário'
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        private function loginUser() {
+        // if (!$this->isSanitized()) {
+        //     echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
+        //     exit;
+        // }
+
         if ($this->isEmptyFields($this->email, $this->password)) {
-            echo json_encode(['status' => 'error', 'message' => 'Email and password are required']);
+            echo json_encode(['status' => 'error', 'message' => 'Email e senha são obrigatórios']);
             exit;
         }
 
-        // Chama a função no MySQL
-        $sql = "SELECT check_login_func(?, ?) AS login_status";
-        $stmt = self::$connection->stmt_init();
-        $stmt->prepare($sql);
-        $stmt->bind_param('ss', $this->email, $this->password);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        self::$connection->close();
+        try {
+            $sql = "SELECT check_login_func(:email, :password) AS login_status";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':password', $this->password);
+            $stmt->execute();
 
-        $status = $row['login_status'];
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $status = $row['login_status'] ?? null;
 
-        // Retorna JSON de acordo com o resultado
-        if ($status === 'ok') {
-            session_start();
-            $_SESSION['user'] = $this->email;
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Login successful',
-                'invalid_field' => null
-            ]);
-        } else {
+            if ($status === 'ok') {
+                session_start();
+                $_SESSION['user'] = $this->email;
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Login realizado com sucesso'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Email ou senha incorretos'
+                ]);
+            }
+
+        } catch (PDOException $e) {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Invalid username or password',
-                'invalid_field' => $status // 'email' ou 'password'
+                'message' => 'Erro ao realizar login: ' . $e->getMessage()
             ]);
         }
     }
 
-    public function login(){
-        return $this->loginUser();
-    }
+        public function logout(): array {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
 
-    public function deleteUser() {}
-    
-    private function searchUserByID(int|string $id): ?User {
-        $user_id = (int) $id;
+            // Limpa sessão
+            $_SESSION = [];
 
-        $sql = "SELECT * FROM TB_USER WHERE ID = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
+            // Remove cookie
+            if (ini_get('session.use_cookies')) {
+                $params = session_get_cookie_params();
+                setcookie(
+                    session_name(),
+                    '',
+                    time() - 42000,
+                    $params['path'],
+                    $params['domain'],
+                    $params['secure'],
+                    $params['httponly']
+                );
+            }
 
-        if ($row) {
-            $user = new User($row['NAME'], $row['EMAIL']);
-            $user->id = $row['ID'];
-            return $user;
+            session_destroy();
+
+            return [
+                'status' => 'success',
+                'message' => 'Sessão destruída, usuário deslogado'
+            ];
         }
 
-        return null;
-    }
+        public function login(){
+            return $this->loginUser();
+        }
+        
+        public function deleteUser() {}
+        
+        private function searchUserByID(int|string $id): ?User {
+            $user_id = (int) $id;
 
+            $sql = "SELECT * FROM TB_USER WHERE ID = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
 
-    // public function getUserIdByEmail(string $email): ?int {
-    //     $sql = "SELECT ID FROM tb_user WHERE EMAIL = ?";
-    //     $stmt = self::$connection->prepare($sql);
-    //     $stmt->bind_param("s", $email);
-    //     $stmt->execute();
-    //     $result = $stmt->get_result();
+            if ($row) {
+                $user = new User($row['NAME'], $row['EMAIL']);
+                $user->id = $row['ID'];
+                return $user;
+            }
 
-    //     $userId = null;
-    //     if ($result && $row = $result->fetch_assoc()) {
-    //         $userId = (int) $row['ID'];
-    //     }
-
-    //     $stmt->close(); 
-    //     return $userId;
-    // }
-
-    private function searchUserByEmail(string $email): ?User{
-        $sql = "SELECT * FROM TB_USER WHERE EMAIL = ?";
-        $stmt = self::$connection->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-
-        if ($row) {
-            $user = new User($row['NAME'], $row['EMAIL']);
-            $user->id = $row['ID'];
-            // $user->setName($row['NAME']);
-            // $user->setEmailAddress($row['EMAIL']);
-            return $user;
+            return null;
         }
 
-        return null;
-    }
-    
-    public function jsonSerialize(): mixed {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email
-        ];
-    }
+        // public function getUserIdByEmail(string $email): ?int {
+        //     $sql = "SELECT ID FROM tb_user WHERE EMAIL = ?";
+        //     $stmt = self::$connection->prepare($sql);
+        //     $stmt->bind_param("s", $email);
+        //     $stmt->execute();
+        //     $result = $stmt->get_result();
 
-    // ---------- MÉTODO ESTÁTICO PARA FECHAR A CONEXÃO ----------
-    public static function closeConnection() {
-        if (self::$connection) {
-            self::$connection->close();
-            self::$connection = null;
+        //     $userId = null;
+        //     if ($result && $row = $result->fetch_assoc()) {
+        //         $userId = (int) $row['ID'];
+        //     }
+
+        //     $stmt->close(); 
+        //     return $userId;
+        // }
+
+        private function searchUserByEmail(string $email): ?User{
+            $sql = "SELECT * FROM TB_USER WHERE EMAIL = ?";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+
+            if ($row) {
+                $user = new User($row['NAME'], $row['EMAIL']);
+                $user->id = $row['ID'];
+                // $user->setName($row['NAME']);
+                // $user->setEmailAddress($row['EMAIL']);
+                return $user;
+            }
+
+            return null;
+        }
+        
+        public function jsonSerialize(): mixed {
+            return [
+                'id' => $this->id,
+                'name' => $this->name,
+                'email' => $this->email
+            ];
+        }
+
+        // ---------- MÉTODO ESTÁTICO PARA FECHAR A CONEXÃO ----------
+        public static function closeConnection() {
+            if (self::$connection) {
+                self::$connection->close();
+                self::$connection = null;
+            }
         }
     }
-}
-
-// $users = [];
-// echo 'com id = int';
-// echo'<br>';
-// for ($i = 1; $i < 15; $i++) {
-//     $users[] = User::loadByID($i); // carrega pelo ID
-// }
-
-// // imprime os usuários carregados pelo ID
-// foreach ($users as $user) {
-//     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-//     echo '<br>';
-// }
-
-// $users2=[];
-// echo 'com id = string';
-// echo'<br>';
-// for ($i = 1; $i < 15; $i++) {
-//     $str = (string) $i;
-//     $users2[] = User::loadByID($str); // carrega pelo ID
-// }
-
-
-// foreach ($users2 as $user) {
-//     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-//     echo '<br>';
-// }
-
-
-
-// // carrega os mesmos usuários pelo e-mail usando os dados de $users
-// $usersByEmail = [];
-// foreach ($users as $user) {
-//     $usersByEmail[] = User::loadByEmail($user->getEmailAddress());
-// }
-
-// echo '<br>Carregados pelo e-mail:<br>';
-
-// // imprime os usuários carregados pelo e-mail
-// foreach ($usersByEmail as $user) {
-//     echo json_encode($user, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-//     echo '<br>';
-// }

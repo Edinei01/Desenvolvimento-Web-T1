@@ -6,7 +6,8 @@
 
 
     use app\core\Database;
-
+    use PDO;
+    use PDOException;
 
     class User implements \JsonSerializable{
 
@@ -177,46 +178,46 @@
             }
         }
 
-        private function loginUser(){
-
-            if(!$this->isSanitized()){
+        private function loginUser() {
+            if (!$this->isSanitized()) {
                 echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
                 exit;
             }
 
-            // Valida campos obrigatórios
             if ($this->isEmptyFields($this->email, $this->password)) {
-                echo json_encode(['status' => 'error', 'message' => 'Email and password are required']);
+                echo json_encode(['status' => 'error', 'message' => 'Email e senha são obrigatórios']);
                 exit;
             }
 
-            // Chama a função no MySQL
-            $sql = "SELECT check_login_func(?, ?) AS login_status";
-            $stmt = self::$connection->stmt_init();
-            $stmt->prepare($sql);
-            $stmt->bind_param('ss', $this->email, $this->password);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $row = $result->fetch_assoc();
-            $stmt->close();
-            self::$connection->close();
+            try {
+                $sql = "SELECT check_login_func(:email, :password) AS login_status";
+                $stmt = self::$connection->prepare($sql);
+                $stmt->bindParam(':email', $this->email);
+                $stmt->bindParam(':password', $this->password);
+                $stmt->execute();
 
-            $status = $row['login_status'];
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $status = $row['login_status'] ?? null;
+                if ($status === 'ok') {
+                    session_start();
+                    $_SESSION['user'] = $this->email;
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Login successful',
+                        'invalid_field' => null
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Invalid username or password',
+                        'invalid_field' => $status 
+                    ]);
+                }
 
-            // Retorna JSON de acordo com o resultado
-            if ($status === 'ok') {
-                session_start();
-                $_SESSION['user'] = $this->email;
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Login successful',
-                    'invalid_field' => null
-                ]);
-            } else {
+            } catch (PDOException $e) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Invalid username or password',
-                    'invalid_field' => $status 
+                    'message' => 'Erro ao realizar login: ' . $e->getMessage()
                 ]);
             }
         }
