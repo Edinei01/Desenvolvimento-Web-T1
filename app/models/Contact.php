@@ -10,6 +10,8 @@
     use app\enums\Category;
     use app\core\Database;
     use Exception;
+    use PDO;
+    use PDOException;
 
     class Contact implements \JsonSerializable{
     
@@ -313,16 +315,27 @@
             header('Content-Type: application/json');
 
             // Busca ID do usuário logado
+            // $email = $this->user->getEmailAddress();
+            // $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
+            // $stmt = self::$connection->prepare($sql);
+            // $stmt->bind_param("s", $email);
+            // $stmt->execute();
+            
+            // $user_id = null;
+            // $stmt->bind_result($user_id);
+            // $stmt->fetch();
+            // $stmt->close();
+
             $email = $this->user->getEmailAddress();
-            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
+            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("s", $email);
+            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
             $stmt->execute();
             
             $user_id = null;
-            $stmt->bind_result($user_id);
-            $stmt->fetch();
-            $stmt->close();
+            $user_id = $stmt->fetchColumn();
+            // $stmt->fetch();
+            // $stmt = null;
 
             if (!$user_id) {
                 echo json_encode(["status" => "error", "message" => "Usuário não encontrado"], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -330,23 +343,23 @@
             }
 
             // Chama a procedure para listar contatos
-            $stmt = self::$connection->prepare("CALL get_user_contacts(?)");
-            $stmt->bind_param("i", $user_id);
+            $stmt = self::$connection->prepare("CALL get_user_contacts(:id)");
+            $stmt->bindParam(":id", $user_id, PDO::PARAM_INT);
             $stmt->execute();
-            $result = $stmt->get_result();
+            // $result = $stmt->get_result();
 
-            $contacts = [];
-            while ($row = $result->fetch_assoc()) {
-                $contacts[] = $row;
-            }
+            $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // while ($row = $result->fetch_assoc()) {
+            //     $contacts[] = $row;
+            // }
 
             return [
                 "status" => "success",
                 "data" => $contacts
             ];
 
-            $stmt->close();
-            self::closeConnection();
+            // $stmt->close();
+            // self::closeConnection();
         }
 
         public function listContact(): array {
@@ -480,4 +493,12 @@
             ];
         }
     }
+
+    // $user = new User();
+    // $user = User::loadByEmail("edinei@email.com");
+    // $user = User::loadByID(1);
+    // echo json_encode($user);
+    // $constact = new Contact();
+    // // $constact->setUser()
+    // var_dump($constact);
 ?>

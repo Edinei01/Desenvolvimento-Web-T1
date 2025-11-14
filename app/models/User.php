@@ -110,14 +110,27 @@
         }
 
         private function existsEmail() {
-            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
-            $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("s", $this->email);
-            $stmt->execute();
-            $stmt->store_result();
+            // $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
+            // $stmt = self::$connection->prepare($sql);
+            // $stmt->bind_param("s", $this->email);
+            // $stmt->execute();
+            // $stmt->store_result();
 
-            $exists = $stmt->num_rows > 0;
-            $stmt->close();
+            // $exists = $stmt->num_rows > 0;
+            // $stmt->close();
+
+            // return $exists;
+
+            $sql = "SELECT ID FROM TB_USER WHERE EMAIL = :email";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bindParam(":email", $this->email, PDO::PARAM_STR);
+            $stmt->execute();
+            // $stmt->store_result();
+
+            // $exists = $stmt->num_rows > 0;
+            $exists = ($stmt->fetchColumn() !== false);
+
+            // $stmt->close();
 
             return $exists;
         }
@@ -127,15 +140,18 @@
             $email = $this->email;
             $password = $this->password;
 
-            $sql = "CALL insert_user(?, ?, ?, @p_id, @success)";
+            $sql = "CALL insert_user(:name, :email, :password, @p_id, @success)";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("sss", $name, $email, $password);
+            $stmt->bindParam(":name", $name, PDO::PARAM_STR);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $stmt->bindParam(":password", $password, PDO::PARAM_STR);
             $stmt->execute();
-            $stmt->close();
+            // $stmt->close();
+            $stmt->closeCursor();
 
             $sql = "SELECT @p_id AS user_id, @success AS success";
-            $result = self::$connection->query($sql);
-            $row = $result->fetch_assoc();
+            $stmt = self::$connection->query($sql);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $this->id = $row['user_id'];
             return $row;
         }
@@ -261,13 +277,14 @@
         private function searchUserByID(int|string $id): ?User {
             $user_id = (int) $id;
 
-            $sql = "SELECT * FROM TB_USER WHERE ID = ?";
+            $sql = "SELECT * FROM TB_USER WHERE ID = :id";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("i", $user_id);
+            $stmt->bindParam(":id", $user_id, PDO::PARAM_INT);
             $stmt->execute();
-            $result = $stmt->get_result();
-            $row = $result->fetch_assoc();
-            $stmt->close();
+            // $result = $stmt->get_result();
+            // $row = $result->fetch_assoc();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            // $stmt->close();
 
             if ($row) {
                 $user = new User($row['NAME'], $row['EMAIL']);
@@ -295,13 +312,14 @@
         // }
 
         private function searchUserByEmail(string $email): ?User{
-            $sql = "SELECT * FROM TB_USER WHERE EMAIL = ?";
+            $sql = "SELECT * FROM TB_USER WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("s", $email);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
-            $result = $stmt->get_result();
-            $row = $result->fetch_assoc();
-            $stmt->close();
+            // $result = $stmt->get_result();
+            // $row = $result->fetch_assoc();
+            // $stmt->close();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($row) {
                 $user = new User($row['NAME'], $row['EMAIL']);
