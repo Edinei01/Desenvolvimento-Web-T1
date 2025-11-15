@@ -81,6 +81,8 @@
         private function addContact() {
             $data = $this->input['contact'] ?? [];
 
+            // echo json_encode($data);
+            // exit;
             $name     = trim($data['name'] ?? '');
             $email    = trim($data['email'] ?? '');
             $phone    = trim($data['phone'] ?? '');

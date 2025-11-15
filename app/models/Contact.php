@@ -102,7 +102,6 @@
             return $this->user;
         }
 
-
         public static function validateContactId() {
             $contactId = intval($_GET['id'] ?? 0);
 
@@ -135,13 +134,16 @@
         public static function loadByEmail(string $email): ?array {
             header('Content-Type: application/json');
 
-            $sql = "SELECT * FROM TB_CONTACTS WHERE EMAIL = ?";
+            $sql = "SELECT * FROM TB_CONTACTS WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("s", $email);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
-            $result = $stmt->get_result();
+            
+            // $result = $stmt->get_result();
 
-            $data = $result->fetch_assoc();
+            // $data = $result->fetch_assoc();
+
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($data) {
                 
@@ -149,7 +151,7 @@
                 return $data;
             }
 
-            $stmt->close();
+            // $stmt->close();
             return null;
         }
 
@@ -170,23 +172,24 @@
             }
 
             // Chama a procedure para listar contatos
-            $stmt = self::$connection->prepare("CALL get_user_contacts(?)");
-            $stmt->bind_param("i", $user_id);
+            $sql = "CALL get_user_contacts(:id)";
+            $stmt = self::$connection->prepare($sql);
+            $stmt->bindParam(":id", $user_id);
             $stmt->execute();
-            $result = $stmt->get_result();
+            // $result = $stmt->get_result();
 
-            $contacts = [];
-            while ($row = $result->fetch_assoc()) {
-                $contacts[] = $row;
-            }
+            $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // while ($row = $result->fetch_assoc()) {
+            //     $contacts[] = $row;
+            // }
 
             echo json_encode([
                 "status" => "success",
                 "data" => $contacts
             ]);
 
-            $stmt->close();
-            self::$connection::closeConnection();
+            // $stmt->close();
+            // self::$connection::closeConnection();
         }
 
         public function getContact(int $id_contact): ?array {
@@ -197,16 +200,16 @@
         public function getContactID(): ?int{
             
             $email = $this->email;
-            $sql = "SELECT ID FROM TB_CONTACTS WHERE EMAIL = ?";
+            $sql = "SELECT ID FROM TB_CONTACTS WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("s", $email);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
-            $id = null;
-            $stmt->bind_result($id);
-            $stmt->fetch();
-            $stmt->close();
+            $id = $stmt->fetchColumn();
+            // $stmt->bind_result($id);
+            // $stmt->fetch();
+            // $stmt->close();
              
-            return $id;
+            return $id ?: null;
         }
 
         private function add(){
@@ -217,19 +220,25 @@
             $phone = $this->phone;
             $categoryValue = $this->category->value;
             $notes = $this->notes;
-           
-            $stmt = self::$connection->prepare("CALL insert_contact(?, ?, ?, ?, ?, ?, @p_id, @p_success)");
+            
+            $sql = "CALL insert_contact(:id, :name, :email, :phone, :categoryValue, :notes, @p_id, @p_success)";
+            $stmt = self::$connection->prepare($sql);
             if (!$stmt) {
                 http_response_code(500);
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Erro ao preparar statement: " . self::$connection->error
+                    "message" => "Erro ao preparar statement"
                 ]);
                 exit;
             }
 
             // Vincula os parâmetros à procedure
-            $stmt->bind_param("isssss", $userId, $name, $email, $phone, $categoryValue, $notes);
+            $stmt->bindParam(":id", $userId, PDO::PARAM_INT);
+            $stmt->bindParam(":name", $name, PDO::PARAM_STR);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $stmt->bindParam(":phone", $phone, PDO::PARAM_STR);
+            $stmt->bindParam(":categoryValue", $categoryValue, PDO::PARAM_STR);
+            $stmt->bindParam(":notes", $notes, PDO::PARAM_STR);
 
             // Executa a procedure
             if (!$stmt->execute()) {
@@ -237,48 +246,47 @@
                 
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Erro ao executar procedure: " . $stmt->error
+                    "message" => "Erro ao executar procedure: "
                 ]);
-                $stmt->close();
-                self::$connection->close();
+                // $stmt->close();
+                // self::$connection->close();
                 exit;
             }
+            $stmt->closeCursor();
+            // $stmt->close();
 
-            $stmt->close();
+            $sql = "SELECT @p_id AS contact_id, @p_success AS success";
+            // $row = self::$connection->query($sql);
 
-            $result = self::$connection->query("SELECT @p_id AS contact_id, @p_success AS success");
+            $stmt2 = self::$connection->query($sql);
+            $row = $stmt2->fetch(PDO::FETCH_ASSOC);
+            
+            if ($row) {
+                if ($row["success"]) {
+                    $this->id = (int)$row["contact_id"];
 
-            if ($result && $row = $result->fetch_assoc()) {
-                if ($row['success']) {
-                    // Retorna sucesso com o ID do contato
-                    $this->id = (int)$row['contact_id'];
                     http_response_code(201);
                     echo json_encode([
-                        "status" => "success",
-                        "message" => "Contato adicionado com sucesso.",
-                        "contact_id" => (int)$row['contact_id']
+                    "status" => "success",
+                    "message" => "Contato adicionado com sucesso.",
+                    "contact_id" => $this->id
                     ]);
                 } else {
-                    // Caso a procedure falhe
                     http_response_code(500);
                     echo json_encode([
-                        "status" => "error",
-                        "message" => "Falha ao inserir contato."
+                    "status" => "error",
+                    "message" => "Falha ao inserir contato."
                     ]);
                 }
-                $result->free();
             } else {
-                // Erro ao recuperar saída da procedure
                 http_response_code(500);
                 echo json_encode([
-                    "status" => "error",
-                    "message" => "Erro ao recuperar saída da procedure."
-                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                "status" => "error",
+                "message" => "Erro ao recuperar saída da procedure."
+                ]);
             }
-
             // Fecha conexão com o banco
-            self::closeConnection();
-          
+            // self::closeConnection();
         }
         
         public function addContact(User $user, string $name, string $email, string $category, string $phone, string $note){
@@ -297,15 +305,16 @@
         private function getContactById(int $contactId): ?array {
             header('Content-Type: application/json');
         
-            $sql = "SELECT * FROM TB_CONTACTS WHERE ID = ?";
+            $sql = "SELECT * FROM TB_CONTACTS WHERE ID = :id";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("i", $contactId);
+            $stmt->bindParam(":id", $contactId, PDO::PARAM_INT);
             $stmt->execute();
-            $result = $stmt->get_result();
+            // $result = $stmt->get_result();
 
-            $contact = $result->fetch_assoc() ?: null;
+            // $contact = $result->fetch_assoc() ?: null;
+            $contact = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 
-            $stmt->close();
+            // $stmt->close();
             return $contact;
         }
 
