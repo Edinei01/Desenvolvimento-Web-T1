@@ -445,25 +445,29 @@
 
             try {
                 //  Prepara a chamada da procedure com parâmetro de saída
-                $sql = "CALL delete_contact(?, @resultado)";
+                $sql = "CALL delete_contact(:id, @resultado)";
                 $stmt =  self::$connection->prepare($sql);
                 if (!$stmt) {
-                    throw new Exception('Erro ao preparar statement: ' . self::$connection->error);
+                    // throw new Exception('Erro ao preparar statement: ' . self::$connection->error);
+                    throw new PDOException('Erro ao preparar statement: ' . self::$connection->getMessage());
                 }
 
-                $stmt->bind_param("i", $contactId);
+                $stmt->bindParam(":id", $contactId, PDO::PARAM_INT);
                 if (!$stmt->execute()) {
-                    throw new Exception('Erro ao executar statement: ' . $stmt->error);
+                    throw new PDOException('Erro ao executar statement: ' . $stmt->getMessage());
                 }
-                $stmt->close();
+                // $stmt->close();
+                $stmt->closeCursor();
 
                 //  Busca o valor do parâmetro de saída
-                $result = self::$connection->query("SELECT @resultado AS resultado");
+                $sql = "SELECT @resultado AS resultado";
+                $result = self::$connection->query($sql);
                 if (!$result) {
-                    throw new Exception('Erro ao buscar resultado: ' . self::$connection->error);
+                    throw new PDOException('Erro ao buscar resultado: ' . self::$connection->getMessage());
                 }
 
-                $row = $result->fetch_assoc();
+                // $row = $result->fetch_assoc();
+                $row = $result->fetch(PDO::FETCH_ASSOC);
                 $mensagem = $row['resultado'] ?? 'Erro desconhecido';
 
                 // Retorna JSON apropriado
