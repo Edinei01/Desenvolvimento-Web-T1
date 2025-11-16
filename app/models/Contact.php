@@ -397,22 +397,31 @@
             }
 
             // Atualizar usando procedure
-            $sql = "CALL update_contact(?, ?, ?, ?, ?, ?, @success)";
+            $sql = "CALL update_contact(:id, :name, :email, :phone, :category, :notes, @success)";
             $stmt = self::$connection->prepare($sql);
-            $stmt->bind_param("isssss", $contactId, $name, $email, $phone, $category, $notes);
+            $stmt->bindParam(":id", $contactId, PDO::PARAM_INT);
+            $stmt->bindParam(":name", $name, PDO::PARAM_STR);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $stmt->bindParam(":phone", $phone, PDO::PARAM_STR);
+            $stmt->bindParam(":category", $category, PDO::PARAM_STR);
+            $stmt->bindParam(":notes", $notes, PDO::PARAM_STR);
 
             if (!$stmt->execute()) {
-                echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato: ' . $stmt->error], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                $stmt->close();
-                self::$connection->close();
+                echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato: '], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                // $stmt->close();
+                // self::$connection->close();
                 exit;
             }
 
-            $stmt->close();
+            // $stmt->close();
+            $stmt->closeCursor();
 
             // Recupera valor da variável de saída @success
-            $result = self::$connection->query("SELECT @success AS success");
-            $row = $result->fetch_assoc();
+            $sql = "SELECT @success AS success";
+            $stmt = self::$connection->query($sql);
+            // $result = self::$connection->query($sql);
+            // $row = $result->fetch_assoc();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $success = $row['success'] ?? 0;
 
             if ($success) {
@@ -421,7 +430,7 @@
                 return ['status' => 'error', 'message' => 'Falha ao atualizar contato'];
             }
 
-            self::$connection->close();
+            // self::$connection->close();
         }
 
         public function updateContact(){
