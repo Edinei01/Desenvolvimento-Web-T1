@@ -3,10 +3,13 @@
     namespace app\models;
 
     require_once __DIR__ . '/../core/Database.php';
+    require_once __DIR__ . '/Auth.php';
+
 
     use app\core\Database;
     use PDO;
     use PDOException;
+    use app\models\Auth;
 
     class User implements \JsonSerializable{
 
@@ -179,49 +182,62 @@
             }
         }
 
-        private function loginUser() {
-            if (!$this->isSanitized()) {
-                echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
-                exit;
-            }
+        // private function loginUser() {
+        //     if (!$this->isSanitized()) {
+        //         echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
+        //         exit;
+        //     }
 
-            if ($this->isEmptyFields($this->email, $this->password)) {
-                echo json_encode(['status' => 'error', 'message' => 'Email e senha são obrigatórios']);
-                exit;
-            }
+        //     if ($this->isEmptyFields($this->email, $this->password)) {
+        //         echo json_encode(['status' => 'error', 'message' => 'Email e senha são obrigatórios']);
+        //         exit;
+        //     }
 
-            try {
-                $sql = "SELECT check_login_func(:email, :password) AS login_status";
-                $stmt = self::$connection->prepare($sql);
-                $stmt->bindParam(':email', $this->email);
-                $stmt->bindParam(':password', $this->password);
-                $stmt->execute();
+        //     try {
+        //         $sql = "SELECT check_login_func(:email, :password) AS login_status";
+        //         $stmt = self::$connection->prepare($sql);
+        //         $stmt->bindParam(':email', $this->email);
+        //         $stmt->bindParam(':password', $this->password);
+        //         $stmt->execute();
 
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                $status = $row['login_status'] ?? null;
-                if ($status === 'ok') {
-                    session_start();
-                    $_SESSION['user'] = $this->email;
-                    echo json_encode([
-                        'status' => 'success',
-                        'message' => 'Login successful',
-                        'invalid_field' => null
-                    ]);
-                } else {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Invalid username or password',
-                        'invalid_field' => $status 
-                    ]);
-                }
+        //         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        //         $status = $row['login_status'] ?? null;
+        //         if ($status === 'ok') {
+        //             session_start();
+        //             $_SESSION['user'] = $this->email;
+        //             echo json_encode([
+        //                 'status' => 'success',
+        //                 'message' => 'Login successful',
+        //                 'invalid_field' => null
+        //             ]);
+        //         } else {
+        //             echo json_encode([
+        //                 'status' => 'error',
+        //                 'message' => 'Invalid username or password',
+        //                 'invalid_field' => $status 
+        //             ]);
+        //         }
 
-            } catch (PDOException $e) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Erro ao realizar login: ' . $e->getMessage()
-                ]);
-            }
+        //     } catch (PDOException $e) {
+        //         echo json_encode([
+        //             'status' => 'error',
+        //             'message' => 'Erro ao realizar login: ' . $e->getMessage()
+        //         ]);
+        //     }
+        // }
+
+        public static function login(){
+            header("Content-Type: application/json");
+
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            $auth = new Auth($data["email"] ?? "", $data["password"] ?? "");
+            $result = $auth->login();
+
+            echo json_encode($result);
+            exit;
         }
+
 
         public function logout(): array {
             if (session_status() === PHP_SESSION_NONE) {
@@ -253,9 +269,9 @@
             ];
         }
 
-        public function login(){
-            return $this->loginUser();
-        }
+        // public function login(){
+        //     return $this->loginUser();
+        // }
         
         public function deleteUser() {}
         
