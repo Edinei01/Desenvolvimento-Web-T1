@@ -139,10 +139,6 @@
             $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
             
-            // $result = $stmt->get_result();
-
-            // $data = $result->fetch_assoc();
-
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($data) {
@@ -151,20 +147,16 @@
                 return $data;
             }
 
-            // $stmt->close();
             return null;
         }
 
         private function getContacts(){
-            // session_start();
             header('Content-Type: application/json');
 
             $email = User::LoggedIn();
             $user = User::loadByEmail($email);
 
-            // $user_id = null;
             $user_id = $user->getId();
-            //  
 
             if (!$user_id) {
                 echo json_encode(["status" => "error", "message" => "Usuário não encontrado"]);
@@ -176,24 +168,17 @@
             $stmt = self::$connection->prepare($sql);
             $stmt->bindParam(":id", $user_id);
             $stmt->execute();
-            // $result = $stmt->get_result();
 
             $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // while ($row = $result->fetch_assoc()) {
-            //     $contacts[] = $row;
-            // }
 
             echo json_encode([
                 "status" => "success",
                 "data" => $contacts
             ]);
 
-            // $stmt->close();
-            // self::$connection::closeConnection();
         }
 
         public function getContact(int $id_contact): ?array {
-            // return $this->getContacts($id_contact);
             return $this->getContactById($id_contact);
         }
 
@@ -205,9 +190,6 @@
             $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
             $id = $stmt->fetchColumn();
-            // $stmt->bind_result($id);
-            // $stmt->fetch();
-            // $stmt->close();
              
             return $id ?: null;
         }
@@ -243,20 +225,15 @@
             // Executa a procedure
             if (!$stmt->execute()) {
                 http_response_code(500);
-                
                 echo json_encode([
                     "status" => "error",
                     "message" => "Erro ao executar procedure: "
                 ]);
-                // $stmt->close();
-                // self::$connection->close();
                 exit;
             }
             $stmt->closeCursor();
-            // $stmt->close();
 
             $sql = "SELECT @p_id AS contact_id, @p_success AS success";
-            // $row = self::$connection->query($sql);
 
             $stmt2 = self::$connection->query($sql);
             $row = $stmt2->fetch(PDO::FETCH_ASSOC);
@@ -285,8 +262,6 @@
                 "message" => "Erro ao recuperar saída da procedure."
                 ]);
             }
-            // Fecha conexão com o banco
-            // self::closeConnection();
         }
         
         public function addContact(User $user, string $name, string $email, string $category, string $phone, string $note){
@@ -309,32 +284,17 @@
             $stmt = self::$connection->prepare($sql);
             $stmt->bindParam(":id", $contactId, PDO::PARAM_INT);
             $stmt->execute();
-            // $result = $stmt->get_result();
 
-            // $contact = $result->fetch_assoc() ?: null;
             $contact = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 
-            // $stmt->close();
             return $contact;
         }
 
         private function list(): array{
 
-            // session_start();
             header('Content-Type: application/json');
 
             // Busca ID do usuário logado
-            // $email = $this->user->getEmailAddress();
-            // $sql = "SELECT ID FROM TB_USER WHERE EMAIL = ?";
-            // $stmt = self::$connection->prepare($sql);
-            // $stmt->bind_param("s", $email);
-            // $stmt->execute();
-            
-            // $user_id = null;
-            // $stmt->bind_result($user_id);
-            // $stmt->fetch();
-            // $stmt->close();
-
             $email = $this->user->getEmailAddress();
             $sql = "SELECT ID FROM TB_USER WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
@@ -343,8 +303,6 @@
             
             $user_id = null;
             $user_id = $stmt->fetchColumn();
-            // $stmt->fetch();
-            // $stmt = null;
 
             if (!$user_id) {
                 echo json_encode(["status" => "error", "message" => "Usuário não encontrado"], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -355,20 +313,13 @@
             $stmt = self::$connection->prepare("CALL get_user_contacts(:id)");
             $stmt->bindParam(":id", $user_id, PDO::PARAM_INT);
             $stmt->execute();
-            // $result = $stmt->get_result();
 
             $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // while ($row = $result->fetch_assoc()) {
-            //     $contacts[] = $row;
-            // }
 
             return [
                 "status" => "success",
                 "data" => $contacts
             ];
-
-            // $stmt->close();
-            // self::closeConnection();
         }
 
         public function listContact(): array {
@@ -408,19 +359,14 @@
 
             if (!$stmt->execute()) {
                 echo json_encode(['status' => 'error', 'message' => 'Falha ao atualizar contato: '], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                // $stmt->close();
-                // self::$connection->close();
                 exit;
             }
 
-            // $stmt->close();
             $stmt->closeCursor();
 
             // Recupera valor da variável de saída @success
             $sql = "SELECT @success AS success";
             $stmt = self::$connection->query($sql);
-            // $result = self::$connection->query($sql);
-            // $row = $result->fetch_assoc();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $success = $row['success'] ?? 0;
 
@@ -429,8 +375,6 @@
             } else {
                 return ['status' => 'error', 'message' => 'Falha ao atualizar contato'];
             }
-
-            // self::$connection->close();
         }
 
         public function updateContact(){
@@ -448,7 +392,6 @@
                 $sql = "CALL delete_contact(:id, @resultado)";
                 $stmt =  self::$connection->prepare($sql);
                 if (!$stmt) {
-                    // throw new Exception('Erro ao preparar statement: ' . self::$connection->error);
                     throw new PDOException('Erro ao preparar statement: ' . self::$connection->getMessage());
                 }
 
@@ -456,7 +399,6 @@
                 if (!$stmt->execute()) {
                     throw new PDOException('Erro ao executar statement: ' . $stmt->getMessage());
                 }
-                // $stmt->close();
                 $stmt->closeCursor();
 
                 //  Busca o valor do parâmetro de saída
@@ -466,7 +408,6 @@
                     throw new PDOException('Erro ao buscar resultado: ' . self::$connection->getMessage());
                 }
 
-                // $row = $result->fetch_assoc();
                 $row = $result->fetch(PDO::FETCH_ASSOC);
                 $mensagem = $row['resultado'] ?? 'Erro desconhecido';
 
@@ -488,7 +429,6 @@
         }
 
         public function deleteContact(){
-            // echo 'ENTROU AQUI'
             return $this->delete();
         }
 
@@ -516,11 +456,4 @@
         }
     }
 
-    // $user = new User();
-    // $user = User::loadByEmail("edinei@email.com");
-    // $user = User::loadByID(1);
-    // echo json_encode($user);
-    // $constact = new Contact();
-    // // $constact->setUser()
-    // var_dump($constact);
 ?>

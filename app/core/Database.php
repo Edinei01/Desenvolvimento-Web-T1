@@ -39,14 +39,4 @@
         }
     }
 
-    // $con = Database::getConnection();
-    // $id = 2;
-    // $sql = "SELECT * FROM `tb_user` WHERE id = :id";
-    // $stmt = $con->prepare($sql);
-    // $stmt->bindParam(':id', $id);
-    // // $id = 1;
-    // $stmt->execute();
-    // $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    // print_r($result);
-    // echo json_encode($result,JSON_PRETTY_PRINT);
 ?>
