@@ -87,8 +87,8 @@ function removeInputError(field) {
 
 function sendRequest(userObject) {
     // Envia os dados para o servidor usando Fetch API
-  
-    fetch("./../../app/controllers/UserController.php", {
+    // fetch("./../../app/controllers/AuthController.php"
+    fetch("./../../app/controllers/AuthController.php", {
       method: "POST", 
       headers: {
         "Content-Type": "application/json", // Especifica o tipo do conteúdo enviado

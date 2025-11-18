@@ -71,23 +71,23 @@
             return $userObj->searchUserByEmail($email);
         }
 
-        public static function LoggedIn(bool $redirect = true): ?string {
-            session_start();
+        // public static function LoggedIn(bool $redirect = true): ?string {
+        //     session_start();
 
-            if (!isset($_SESSION['user'])) {
-                if ($redirect) {
-                    header("Location: ../../public/index.php");
-                    exit;
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Usuário não logado."
-                    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                    exit;
-                }
-            }
-            return $_SESSION['user'];
-        }
+        //     if (!isset($_SESSION['user'])) {
+        //         if ($redirect) {
+        //             header("Location: ../../public/index.php");
+        //             exit;
+        //         } else {
+        //             echo json_encode([
+        //                 "status" => "error",
+        //                 "message" => "Usuário não logado."
+        //             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        //             exit;
+        //         }
+        //     }
+        //     return $_SESSION['user'];
+        // }
 
 
         // ---------- MÉTODOS PRIVADOS ----------
@@ -226,17 +226,17 @@
         //     }
         // }
 
-        public static function login(){
-            header("Content-Type: application/json");
+        // public static function login(){
+        //     header("Content-Type: application/json");
 
-            $data = json_decode(file_get_contents("php://input"), true);
+        //     $data = json_decode(file_get_contents("php://input"), true);
 
-            $auth = new Auth($data["email"] ?? "", $data["password"] ?? "");
-            $result = $auth->login();
+        //     $auth = new Auth($data["email"] ?? "", $data["password"] ?? "");
+        //     $result = $auth->login();
 
-            echo json_encode($result);
-            exit;
-        }
+        //     echo json_encode($result);
+        //     exit;
+        // }
 
 
         public function logout(): array {

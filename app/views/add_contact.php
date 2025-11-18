@@ -5,7 +5,7 @@
 
     use app\models\User;
 
-    User::LoggedIn();
+    // User::LoggedIn();
 ?>
 
 <!DOCTYPE html>

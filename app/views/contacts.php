@@ -5,7 +5,12 @@
 
     use app\models\User;
 
-    User::LoggedIn();
+    // User::LoggedIn();
+
+    // use app\models\Auth;
+
+    // Auth::loggedIn(); // Se não estiver logado, redireciona
+
 ?>
 
 <!DOCTYPE html>

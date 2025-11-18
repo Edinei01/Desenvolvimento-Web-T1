@@ -7,7 +7,7 @@
     use App\Models\Contact;
     use app\models\User;
 
-    User::LoggedIn();
+    // User::LoggedIn();
 
     $contactId = Contact::validateContactId();
 ?>

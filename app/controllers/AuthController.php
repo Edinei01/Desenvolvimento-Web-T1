@@ -1,11 +1,12 @@
-<?php
+<?php 
 
-    namespace app\Controllers;
+    require_once __DIR__ . '/../models/Auth.php';
     require_once __DIR__ . '/../models/User.php';
-
+    
+    use app\models\Auth;
     use app\models\User;
 
-    class UserController {
+    class AuthController {
 
         private $user;
         private $input;
@@ -23,18 +24,20 @@
             );
         }
 
-        /**
-        * Método principal que decide a ação
-        */
         private function handleRequest() {
             $action = $this->input['action'] ?? '';
             switch ($action) {
                 case 'register':
-                    $this->register();
+                    // $this->register();
+                break;
+
+                case 'login':
+                    
+                    $this->login();
                 break;
             
                 case 'logout':
-                    $this->logout();
+                    // $this->logout();
                 break;
             
                 default:
@@ -45,31 +48,6 @@
             }
         }
 
-        /**
-        * Chama o método de criação de usuário
-        */
-        private function register() {
-            $this->user->registerUser();
-        }
-
-        /**
-        * Chama o método de login do usuário
-        */
-        private function login() {
-            $this->user->login();
-        }
-
-        /**
-        * Chama o método de logout do usuário
-        */
-        private function logout() {
-            $response = $this->user->logout();
-            $this->sendResponse($response);
-        }
-
-        /**
-        * Método auxiliar para enviar JSON formatado
-        */
         private function sendResponse(array $data) {
             echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         }
@@ -78,7 +56,24 @@
             $controller = new self();
             $controller->handleRequest();
         }
-    }
 
-    UserController::start();
+        public function login(){
+            header("Content-Type: application/json");
+
+            $auth = new Auth($this->user->getEmailAddress() ?? "", $this->user->getPassword() ?? "");
+            $result = $auth->login();
+
+            echo json_encode($result);
+            exit;
+        }
+
+        public static function requireLogin() {
+            session_start();
+            if (!isset($_SESSION["user"])) {
+                header("Location: ../../public/index.php");
+                exit;
+            }
+        }
+    }
+    AuthController::start();
 ?>
