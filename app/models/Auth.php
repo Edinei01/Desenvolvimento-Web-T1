@@ -102,13 +102,42 @@
             }
         }
 
-        // Aqui não faz mais redirecionamento — só retorna true/false.
-        public static function isLogged(): bool {
+        public function logout(): array {
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
 
-            return !empty($_SESSION['user']);
+            // Limpa sessão
+            $_SESSION = [];
+
+            // Remove cookie
+            if (ini_get('session.use_cookies')) {
+                $params = session_get_cookie_params();
+                setcookie(
+                    session_name(),
+                    '',
+                    time() - 42000,
+                    $params['path'],
+                    $params['domain'],
+                    $params['secure'],
+                    $params['httponly']
+                );
+            }
+
+            session_destroy();
+
+            return [
+                'status' => 'success',
+                'message' => 'Sessão destruída, usuário deslogado'
+            ];
         }
 
+        // // Aqui não faz mais redirecionamento — só retorna true/false.
+        // public static function isLogged(): bool {
+        //     if (session_status() === PHP_SESSION_NONE) {
+        //         session_start();
+        //     }
+
+        //     return !empty($_SESSION['user']);
+        // }
     }

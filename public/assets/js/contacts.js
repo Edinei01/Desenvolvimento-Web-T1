@@ -231,14 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             try {
-                const data = await fetchJSON('./../../app/controllers/UserController.php', {
+                // const data = await fetchJSON('./../../app/controllers/UserController.php'
+                const data = await fetchJSON('./../../app/controllers/AuthController.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'logout' })
                 });
-
-                if (data.status === 'success') 
-                    {
+                console.log(JSON.stringify(data, null, 2));
+                if (data.status === 'success') {
                     window.location.href = './../../public/index.php';
                 } else {
                     alertMsg('Falha no logout: ' + (data.message || 'erro desconhecido'));

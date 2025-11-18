@@ -33,10 +33,6 @@
                     $this->register();
                 break;
             
-                case 'logout':
-                    $this->logout();
-                break;
-            
                 default:
                     $this->sendResponse([
                     'status' => 'error',

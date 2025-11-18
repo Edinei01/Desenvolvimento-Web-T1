@@ -37,7 +37,7 @@
                 break;
             
                 case 'logout':
-                    // $this->logout();
+                    $this->logout();
                 break;
             
                 default:
@@ -56,15 +56,23 @@
             $controller = new self();
             $controller->handleRequest();
         }
-
+        
         public function login(){
             header("Content-Type: application/json");
 
             $auth = new Auth($this->user->getEmailAddress() ?? "", $this->user->getPassword() ?? "");
             $result = $auth->login();
 
-            echo json_encode($result);
+            // echo json_encode($result);
+            $this->sendResponse($result);
             exit;
+        }
+
+        private function logout() {
+            // $this->user->logout();
+            $auth = new Auth();
+            $response = $auth->logout();
+            $this->sendResponse($response);
         }
 
         public static function requireLogin() {
