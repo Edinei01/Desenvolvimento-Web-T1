@@ -3,8 +3,10 @@
     namespace app\models;
 
     require_once __DIR__ . '/../core/Database.php';
+    require_once __DIR__ . '/User.php';
 
     use app\core\Database;
+    use app\models\User;
     use PDO;
     use PDOException;
 
@@ -46,6 +48,7 @@
             return true;
         }
 
+        // SELECT PASS FROM `tb_user` WHERE EMAIL = "edinei@email.com";
 
         public function login(): array {
 
@@ -58,40 +61,37 @@
             }
 
             $sanitized = $this->sanitize();
-            
-            if (is_array($sanitized)) {
-                return $sanitized;
-            }
+            if (is_array($sanitized)) return $sanitized;
 
             try {
 
-                $sql = "SELECT check_login_func(:email, :password) AS login_status";
-                $stmt = self::$connection->prepare($sql);
-                $stmt->bindValue(":email", $this->email, PDO::PARAM_STR);
-                $stmt->bindValue(":password", $this->password, PDO::PARAM_STR);
-                $stmt->execute();
+            $user = User::loadByEmail($this->email);
 
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$user) {
+                return [
+                    "status" => "error",
+                    "message" => "Email incorreto",
+                    "invalid_field" => "email"
+                ];
+            }
 
-                $status = $row['login_status'] ?? null;
+            if (!password_verify($this->password, $user->getPassword())) {
+                return [
+                    "status" => "error",
+                    "message" => "Senha incorreta",
+                    "invalid_field" => "password"
+                ];
+            }
 
-                if ($status === "ok") {
-                    session_start();
-                    $_SESSION['user'] = $this->email;
-                    return [
-                        "status" => "success",
-                        "message" => "Login realizado com sucesso",
-                        "invalid_field" => null,
-                        "user" => $this->email
-                    ];
+            session_start();
+            $_SESSION['user'] = $this->email;
 
-                } else {
-                    return [
-                        "status" => "error",
-                        "message" => "Email ou senha incorretos",
-                        "invalid_field" => $status 
-                    ];
-                }
+            return [
+                "status" => "success",
+                "message" => "Login realizado com sucesso",
+                "invalid_field" => null,
+                "user" => $this->email
+            ];
 
             } catch (PDOException $e) {
                 return [
@@ -100,6 +100,12 @@
                     "debug" => $e->getMessage()
                 ];
             }
+        }
+
+        public function existsEmail(): bool{
+            $user = new User();
+            $user->setEmailAddress($this->email);
+            return $user->existsEmail();
         }
 
         public function logout(): array {
@@ -131,13 +137,4 @@
                 'message' => 'Sessão destruída, usuário deslogado'
             ];
         }
-
-        // // Aqui não faz mais redirecionamento — só retorna true/false.
-        // public static function isLogged(): bool {
-        //     if (session_status() === PHP_SESSION_NONE) {
-        //         session_start();
-        //     }
-
-        //     return !empty($_SESSION['user']);
-        // }
     }

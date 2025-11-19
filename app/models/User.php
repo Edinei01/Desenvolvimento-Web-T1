@@ -66,7 +66,7 @@
             return $userObj->searchUserByID($id);
         }
 
-        public static function loadByEmail(string $email): User{
+        public static function loadByEmail(string $email): ?User{
             $userObj = new self();
             return $userObj->searchUserByEmail($email);
         }
@@ -93,8 +93,8 @@
             
             return true;
         }
-        
-        private function existsEmail() {
+
+        public function existsEmail(): bool {
             
             $sql = "SELECT ID FROM TB_USER WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
@@ -103,13 +103,13 @@
             
             $exists = ($stmt->fetchColumn() !== false);
             
-            return $exists;
+            return !empty($exists);
         }
         
         private function insertUser() {       
             $name = $this->name;
             $email = $this->email;
-            $password = $this->password;
+            $password = password_hash($this->password, PASSWORD_DEFAULT);
             
             $sql = "CALL insert_user(:name, :email, :password, @p_id, @success)";
             $stmt = self::$connection->prepare($sql);
@@ -186,7 +186,7 @@
             return null;
         }
 
-        private function searchUserByEmail(string $email): ?User{
+        public function searchUserByEmail(string $email): ?User{
             $sql = "SELECT * FROM TB_USER WHERE EMAIL = :email";
             $stmt = self::$connection->prepare($sql);
             $stmt->bindParam(":email", $email, PDO::PARAM_STR);
@@ -195,7 +195,7 @@
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($row) {
-                $user = new User($row['NAME'], $row['EMAIL']);
+                $user = new User($row['NAME'], $row['EMAIL'], $row['PASS']);
                 $user->id = $row['ID'];
                 return $user;
             }
@@ -207,7 +207,8 @@
             return [
                 'id' => $this->id,
                 'name' => $this->name,
-                'email' => $this->email
+                'email' => $this->email,
+                'password' => $this->password
             ];
         }
 
@@ -218,122 +219,4 @@
                 self::$connection = null;
             }
         }
-
-
-
-
-
-
-
-
-        
-        
-        // public static function LoggedIn(bool $redirect = true): ?string {
-        //     session_start();
-
-        //     if (!isset($_SESSION['user'])) {
-        //         if ($redirect) {
-        //             header("Location: ../../public/index.php");
-        //             exit;
-        //         } else {
-        //             echo json_encode([
-        //                 "status" => "error",
-        //                 "message" => "Usuário não logado."
-        //             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        //             exit;
-        //         }
-        //     }
-        //     return $_SESSION['user'];
-        // }
-
-        // private function loginUser() {
-        //     if (!$this->isSanitized()) {
-        //         echo json_encode(['status' => 'error', 'message' => 'Campos inválidos']);
-        //         exit;
-        //     }
-
-        //     if ($this->isEmptyFields($this->email, $this->password)) {
-        //         echo json_encode(['status' => 'error', 'message' => 'Email e senha são obrigatórios']);
-        //         exit;
-        //     }
-
-        //     try {
-        //         $sql = "SELECT check_login_func(:email, :password) AS login_status";
-        //         $stmt = self::$connection->prepare($sql);
-        //         $stmt->bindParam(':email', $this->email);
-        //         $stmt->bindParam(':password', $this->password);
-        //         $stmt->execute();
-
-        //         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        //         $status = $row['login_status'] ?? null;
-        //         if ($status === 'ok') {
-        //             session_start();
-        //             $_SESSION['user'] = $this->email;
-        //             echo json_encode([
-        //                 'status' => 'success',
-        //                 'message' => 'Login successful',
-        //                 'invalid_field' => null
-        //             ]);
-        //         } else {
-        //             echo json_encode([
-        //                 'status' => 'error',
-        //                 'message' => 'Invalid username or password',
-        //                 'invalid_field' => $status 
-        //             ]);
-        //         }
-
-        //     } catch (PDOException $e) {
-        //         echo json_encode([
-        //             'status' => 'error',
-        //             'message' => 'Erro ao realizar login: ' . $e->getMessage()
-        //         ]);
-        //     }
-        // }
-
-        // public static function login(){
-        //     header("Content-Type: application/json");
-
-        //     $data = json_decode(file_get_contents("php://input"), true);
-
-        //     $auth = new Auth($data["email"] ?? "", $data["password"] ?? "");
-        //     $result = $auth->login();
-
-        //     echo json_encode($result);
-        //     exit;
-        // }
-
-
-        // public function logout(): array {
-        //     if (session_status() === PHP_SESSION_NONE) {
-        //         session_start();
-        //     }
-
-        //     // Limpa sessão
-        //     $_SESSION = [];
-
-        //     // Remove cookie
-        //     if (ini_get('session.use_cookies')) {
-        //         $params = session_get_cookie_params();
-        //         setcookie(
-        //             session_name(),
-        //             '',
-        //             time() - 42000,
-        //             $params['path'],
-        //             $params['domain'],
-        //             $params['secure'],
-        //             $params['httponly']
-        //         );
-        //     }
-
-        //     session_destroy();
-
-        //     return [
-        //         'status' => 'success',
-        //         'message' => 'Sessão destruída, usuário deslogado'
-        //     ];
-        // }
-
-        // public function login(){
-        //     return $this->loginUser();
-        // }
     }

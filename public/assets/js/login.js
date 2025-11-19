@@ -87,7 +87,7 @@ function removeInputError(field) {
 
 function sendRequest(userObject) {
     // Envia os dados para o servidor usando Fetch API
-    // fetch("./../../app/controllers/AuthController.php"
+    // fetch("./../../app/controllers/AuthController.php",
     fetch("./../../app/controllers/AuthController.php", {
       method: "POST", 
       headers: {
@@ -121,7 +121,7 @@ function sendRequest(userObject) {
     // Captura erros de rede ou falhas na requisição
     .catch((error) => {
       console.error("Erro:", error);
-      console.log("é aqui" + error);
+      // console.log("é aqui" + error);
     });
 }
 
