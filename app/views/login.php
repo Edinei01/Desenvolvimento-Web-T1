@@ -1,3 +1,18 @@
+<?php 
+    
+    require_once __DIR__ . "/../../config/Config.php";
+    require_once __DIR__ . "/../models/User.php";
+
+    use app\models\User;
+    use Config\Config;
+
+    session_start();
+
+    if (isset($_SESSION['user'])) {
+        header("Location: contacts.php");
+        exit;
+    }
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -24,7 +39,7 @@
                 </div>
                 <span id="login-error" class="hidden"></span>
                 <button type="submit" class="btn-login">Login</button>
-                <span>Ainda não tem uma conta? <a id="link-cadastrar" class="link-cadastrar-login"  href="cadastro.html">Cadastre-se!</a></span>
+                <span>Ainda não tem uma conta? <a id="link-cadastrar" class="link-cadastrar-login"  href="cadastro.php">Cadastre-se!</a></span>
             </form>
         </section>
     </main>

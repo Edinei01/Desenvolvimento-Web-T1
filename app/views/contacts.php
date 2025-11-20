@@ -1,18 +1,19 @@
 <?php
-// include_once "../includes/auth/check_session.php";
 
+    require_once __DIR__ . "/../../config/Config.php";
     require_once __DIR__ . "/../models/User.php";
 
     use app\models\User;
+    use Config\Config;
 
-    // User::LoggedIn();
+    session_start();
 
-    // use app\models\Auth;
-
-    // Auth::loggedIn(); // Se não estiver logado, redireciona
+    if (!isset($_SESSION['user'])) {
+        header("Location: " . Config::BASE_URL . "/index.php");
+        exit;
+    }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
