@@ -217,38 +217,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // ============================
-    // 5️⃣ Logout
-    // ============================
-    const initLogout = () => {
-        const contactsPg = document.getElementById('page-contact');
-        if (!contactsPg) return;
+    // // ============================
+    // // 5️⃣ Logout
+    // // ============================
+    // const initLogout = () => {
+    //     const contactsPg = document.getElementById('page-contact');
+    //     if (!contactsPg) return;
 
-        const btnLogOut = contactsPg.querySelector('#btn-sair');
-        if (!btnLogOut) return;
+    //     const btnLogOut = contactsPg.querySelector('#btn-sair');
+    //     if (!btnLogOut) return;
 
-        btnLogOut.addEventListener("click", async (e) => {
-            e.preventDefault();
+    //     btnLogOut.addEventListener("click", async (e) => {
+    //         e.preventDefault();
 
-            try {
-                // const data = await fetchJSON('./../../app/controllers/UserController.php'
-                const data = await fetchJSON('./../../app/controllers/AuthController.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'logout' })
-                });
-                console.log(JSON.stringify(data, null, 2));
-                if (data.status === 'success') {
-                    window.location.href = './../../public/index.php';
-                } else {
-                    alertMsg('Falha no logout: ' + (data.message || 'erro desconhecido'));
-                }
-            } catch (err) {
-                console.error('Erro no fetch de logout:', err);
-                alertMsg('Erro ao tentar deslogar. Veja console.');
-            }
-        });
-    };
+    //         try {
+    //             // const data = await fetchJSON('./../../app/controllers/UserController.php'
+    //             const data = await fetchJSON('./../../app/controllers/AuthController.php', {
+    //                 method: 'POST',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 body: JSON.stringify({ action: 'logout' })
+    //             });
+    //             console.log(JSON.stringify(data, null, 2));
+    //             if (data.status === 'success') {
+    //                 window.location.href = './../../public/index.php';
+    //             } else {
+    //                 alertMsg('Falha no logout: ' + (data.message || 'erro desconhecido'));
+    //             }
+    //         } catch (err) {
+    //             console.error('Erro no fetch de logout:', err);
+    //             alertMsg('Erro ao tentar deslogar. Veja console.');
+    //         }
+    //     });
+    // };
 
     // ============================
     // 6️⃣ Visualizar Contato (view_contact.php)
