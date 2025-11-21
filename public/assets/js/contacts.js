@@ -354,9 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
         initAddContact();
         loadContactsList();
         initEditContact();
-        initLogout();
         initViewContact();
         initSearchContacts();
+        // initLogout();
     };
 
     initApp();
