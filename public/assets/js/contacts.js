@@ -1,3 +1,18 @@
+// =======================
+// Proteção de sessão
+// =======================
+if (localStorage.getItem("session") !== "active") {
+    window.location.href = "./../../public/index.php"; // volta para login
+}
+
+// Detecta logout global vindo de outra aba
+window.addEventListener("storage", (event) => {
+    if (event.key === "logout") {
+        window.location.href = "./../../public/index.php";
+    }
+});
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // ============================

@@ -104,6 +104,10 @@ function sendRequest(userObject) {
       console.log(JSON.stringify(result, null, 2));
       // Se o login foi bem-sucedido
       if (result.status === "success") {
+        
+        localStorage.setItem("session", "active");
+        localStorage.setItem("logout", "0"); // inicializa
+
         inputClear(); // Limpa os campos
         window.location.replace("./../../app/views/contacts.php"); // Redireciona o usuário
         return;       // Interrompe a execução da função
