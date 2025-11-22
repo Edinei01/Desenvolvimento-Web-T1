@@ -1,13 +1,18 @@
 <?php
-
+    require_once __DIR__ . "/../../config/Config.php";
     require_once __DIR__ . "/../models/Contact.php";
     require_once __DIR__ . "/../models/User.php";
 
-
     use App\Models\Contact;
     use app\models\User;
+    use Config\Config;
 
-    // User::LoggedIn();
+    session_start();
+
+    if (!isset($_SESSION['user'])) {
+        header("Location: " . Config::BASE_URL . "/index.php");
+        exit;
+    }
 
     $contactId = Contact::validateContactId();
 ?>

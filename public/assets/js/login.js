@@ -106,7 +106,7 @@ function sendRequest(userObject) {
       if (result.status === "success") {
         
         localStorage.setItem("session", "active");
-        localStorage.setItem("logout", "0"); // inicializa
+        localStorage.setItem("logout", "0");
 
         inputClear(); // Limpa os campos
         window.location.replace("./../../app/views/contacts.php"); // Redireciona o usuário

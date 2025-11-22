@@ -22,10 +22,8 @@
             .then(data => {
                 console.log(JSON.stringify(data, null, 2));
                 if (data.status === 'success') {
-                    // 🔥 REMOVE SESSÃO LOCAL
+                    
                     localStorage.removeItem("session");
-
-                    // 🔥 DISPARA EVENTO DE LOGOUT PARA TODAS ABAS
                     localStorage.setItem("logout", Date.now());
 
                     window.location.href = './../../public/index.php';

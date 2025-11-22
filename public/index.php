@@ -23,6 +23,11 @@
 
     // header('Location: ./pages/login.html');
     // header('Location: ../app/views/login.html');
+     if (isset($_SESSION['user'])) {
+        header("Location: contacts.php");
+        exit;
+    }
+    
     header('Location: ../app/views/login.php');
     exit();
 ?>
